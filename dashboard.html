@@ -1,0 +1,3670 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard de Processos - Análise Completa</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Flatpickr Calendar -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/pt.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #57762a;
+            --primary-dark: #45601f;
+            --secondary: #6b8f3a;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --info: #3b82f6;
+            --dark: #1f2937;
+            --light: #f9fafb;
+            --border: #e5e7eb;
+            --text: #374151;
+            --text-light: #6b7280;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #57762a 0%, #6b8f3a 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: var(--text);
+        }
+
+        .dashboard-container {
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        /* Header */
+        .header {
+            background: white;
+            border-radius: 20px;
+            padding: 30px 40px;
+            margin-bottom: 25px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 20px;
+            position: relative;
+        }
+        
+        .header-logo {
+            display: flex;
+            align-items: center;
+            gap: 25px;
+            position: absolute;
+            left: 40px;
+            z-index: 10;
+        }
+
+        .header-logo-container {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            padding: 12px 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(87, 118, 42, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .header-logo img {
+            max-height: 50px;
+            max-width: 180px;
+            width: auto;
+            height: auto;
+            object-fit: contain;
+            display: block;
+        }
+
+        .header-title-center {
+            flex: 1;
+            text-align: center;
+        }
+
+        @media (max-width: 768px) {
+            .header-logo {
+                position: static;
+                justify-content: center;
+                width: 100%;
+                margin-bottom: 15px;
+            }
+            
+            .header-logo-container {
+                padding: 10px 15px;
+            }
+            
+            .header-logo img {
+                max-height: 40px;
+                max-width: 150px;
+            }
+            
+            .header-title-center {
+                width: 100%;
+            }
+        }
+
+        .header > div:first-child {
+            flex: 1;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin: 0;
+        }
+
+        .header .subtitle {
+            color: var(--text-light);
+            font-size: 1rem;
+            margin-top: 5px;
+        }
+
+        /* Filtros */
+        .filters-panel {
+            background: white;
+            border-radius: 20px;
+            padding: 25px;
+            margin-bottom: 25px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+        }
+
+        .filters-panel h3 {
+            font-size: 1.2rem;
+            font-weight: 700;
+            margin-bottom: 20px;
+            color: var(--dark);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .filters-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .filter-item {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .filter-item label {
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: var(--text);
+        }
+
+        .filter-item select,
+        .filter-item input {
+            padding: 12px 15px;
+            border: 2px solid var(--border);
+            border-radius: 10px;
+            font-size: 0.95rem;
+            transition: all 0.3s;
+            font-family: inherit;
+        }
+
+        .filter-item select:focus,
+        .filter-item input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(87, 118, 42, 0.1);
+        }
+
+        .filter-item input.flatpickr-input {
+            padding-right: 45px;
+            cursor: pointer;
+            background: white;
+        }
+
+        /* Estilo para o input alternativo do Flatpickr */
+        .flatpickr-input.altInput {
+            padding-right: 45px !important;
+        }
+
+        /* Estilos customizados para o Flatpickr - Melhorado */
+        .flatpickr-calendar {
+            font-family: 'Inter', sans-serif;
+            border-radius: 20px;
+            box-shadow: 0 15px 50px rgba(0, 0, 0, 0.2);
+            border: 2px solid rgba(87, 118, 42, 0.1);
+            overflow: hidden;
+            animation: fadeInCalendar 0.3s ease-out;
+        }
+
+        @keyframes fadeInCalendar {
+            from {
+                opacity: 0;
+                transform: translateY(-10px) scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        .flatpickr-months {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            border-radius: 0;
+            padding: 20px;
+            position: relative;
+        }
+
+        .flatpickr-month {
+            color: white;
+            height: auto;
+        }
+
+        .flatpickr-current-month {
+            color: white;
+            font-weight: 700;
+            font-size: 1.1rem;
+            padding: 5px 0;
+        }
+
+        .flatpickr-prev-month,
+        .flatpickr-next-month {
+            color: white;
+            fill: white;
+            padding: 8px;
+            border-radius: 8px;
+            transition: all 0.2s;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .flatpickr-prev-month:hover,
+        .flatpickr-next-month:hover {
+            background: rgba(255, 255, 255, 0.25);
+            transform: scale(1.1);
+        }
+
+        .flatpickr-prev-month svg,
+        .flatpickr-next-month svg {
+            width: 14px;
+            height: 14px;
+        }
+
+        .flatpickr-weekdays {
+            background: rgba(87, 118, 42, 0.08);
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(87, 118, 42, 0.1);
+        }
+
+        .flatpickr-weekday {
+            color: var(--primary);
+            font-weight: 700;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .flatpickr-days {
+            padding: 10px;
+            background: white;
+        }
+
+        .flatpickr-day {
+            border-radius: 10px;
+            transition: all 0.2s ease;
+            border: 2px solid transparent;
+            font-weight: 500;
+            height: 40px;
+            line-height: 40px;
+        }
+
+        .flatpickr-day:hover {
+            background: rgba(87, 118, 42, 0.15);
+            border-color: var(--primary);
+            transform: scale(1.05);
+            cursor: pointer;
+        }
+
+        .flatpickr-day.selected,
+        .flatpickr-day.startRange,
+        .flatpickr-day.endRange {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            border-color: var(--primary-dark);
+            color: white;
+            font-weight: 700;
+            box-shadow: 0 4px 12px rgba(87, 118, 42, 0.4);
+            transform: scale(1.05);
+        }
+
+        .flatpickr-day.selected:hover,
+        .flatpickr-day.startRange:hover,
+        .flatpickr-day.endRange:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 16px rgba(87, 118, 42, 0.5);
+        }
+
+        .flatpickr-day.today {
+            border-color: var(--primary);
+            font-weight: 700;
+            background: rgba(87, 118, 42, 0.1);
+            color: var(--primary);
+        }
+
+        .flatpickr-day.today:hover {
+            background: rgba(87, 118, 42, 0.2);
+            transform: scale(1.05);
+        }
+
+        .flatpickr-day.inRange {
+            background: rgba(87, 118, 42, 0.08);
+            border-color: rgba(87, 118, 42, 0.2);
+        }
+
+        .flatpickr-day.flatpickr-disabled,
+        .flatpickr-day.prevMonthDay,
+        .flatpickr-day.nextMonthDay {
+            color: #ccc;
+            opacity: 0.4;
+        }
+
+        .flatpickr-day.flatpickr-disabled:hover {
+            background: transparent;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Input do calendário melhorado */
+        .filter-item input.flatpickr-input {
+            background: white;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .filter-item input.flatpickr-input::after {
+            content: '\f073';
+            font-family: 'Font Awesome 6 Free';
+            position: absolute;
+            right: 15px;
+            color: var(--primary);
+        }
+
+        /* Melhorar o wrapper do input */
+        .flatpickr-input-wrapper {
+            position: relative;
+        }
+
+        .flatpickr-input-wrapper::after {
+            content: '\f073';
+            font-family: 'Font Awesome 6 Free';
+            font-weight: 900;
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--primary);
+            pointer-events: none;
+            font-size: 1rem;
+        }
+
+        .filter-item select[multiple] {
+            min-height: 120px;
+            padding: 10px;
+        }
+
+        .checkbox-container {
+            max-height: 200px;
+            overflow-y: auto;
+            border: 2px solid var(--border);
+            border-radius: 10px;
+            padding: 10px;
+            background: white;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 5px;
+        }
+
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            padding: 6px 8px;
+            cursor: pointer;
+            transition: background 0.2s;
+            border-radius: 5px;
+        }
+
+        .checkbox-item:hover {
+            background: var(--light);
+        }
+
+        .checkbox-item input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            min-width: 16px;
+            margin-right: 8px;
+            cursor: pointer;
+            accent-color: var(--primary);
+            flex-shrink: 0;
+        }
+
+        .checkbox-item label {
+            cursor: pointer;
+            font-weight: 500;
+            font-size: 0.9rem;
+            flex: 1;
+            margin: 0;
+            user-select: none;
+        }
+
+        .filter-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(5px);
+            animation: fadeIn 0.3s;
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 5% auto;
+            padding: 0;
+            border-radius: 20px;
+            width: 90%;
+            max-width: 800px;
+            max-height: 85vh;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            animation: slideDown 0.3s;
+        }
+
+        @keyframes slideDown {
+            from {
+                transform: translateY(-50px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .modal-header {
+            padding: 25px 30px;
+            border-bottom: 2px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            border-radius: 20px 20px 0 0;
+        }
+
+        .modal-header h2 {
+            margin: 0;
+            font-size: 1.5rem;
+        }
+
+        .modal-close {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            font-size: 2rem;
+            font-weight: bold;
+            cursor: pointer;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+        }
+
+        .modal-close:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: rotate(90deg);
+        }
+
+        .modal-body {
+            padding: 30px;
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        .modal-footer {
+            padding: 20px 30px;
+            border-top: 2px solid var(--border);
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+
+        .equipe-card {
+            background: var(--light);
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 15px;
+            transition: all 0.3s;
+        }
+
+        .equipe-card:hover {
+            border-color: var(--primary);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .equipe-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .equipe-nome {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--dark);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .equipe-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn-icon {
+            padding: 8px 12px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.3s;
+        }
+
+        .btn-icon.edit {
+            background: var(--info);
+            color: white;
+        }
+
+        .btn-icon.delete {
+            background: var(--danger);
+            color: white;
+        }
+
+        .btn-icon:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .equipe-membros {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .membro-item {
+            display: flex;
+            align-items: center;
+            padding: 8px 12px;
+            background: white;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+        }
+
+        .membro-item input[type="checkbox"] {
+            margin-right: 8px;
+            cursor: pointer;
+        }
+
+        .membro-item label {
+            cursor: pointer;
+            flex: 1;
+            margin: 0;
+            font-size: 0.9rem;
+        }
+
+        .btn-primary {
+            padding: 12px 30px;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(87, 118, 42, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(87, 118, 42, 0.4);
+        }
+
+        .btn-primary:active {
+            transform: translateY(0);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+
+        .btn-primary.loading {
+            position: relative;
+        }
+
+        .btn-primary.loading .fa-spinner {
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .btn-secondary {
+            padding: 12px 30px;
+            background: linear-gradient(135deg, var(--secondary) 0%, var(--primary) 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(107, 143, 58, 0.3);
+        }
+
+        .btn-secondary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(107, 143, 58, 0.4);
+        }
+
+        .btn-secondary:active {
+            transform: translateY(0);
+        }
+
+        /* Métricas */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
+            margin-bottom: 25px;
+        }
+
+        .metric-card {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .metric-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 5px;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+        }
+
+        .metric-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 50px rgba(0, 0, 0, 0.15);
+        }
+
+        .metric-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .metric-title {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: var(--text-light);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .metric-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            color: white;
+        }
+
+        .metric-icon.primary { background: linear-gradient(135deg, var(--primary), var(--secondary)); }
+        .metric-icon.success { background: linear-gradient(135deg, var(--success), #059669); }
+        .metric-icon.warning { background: linear-gradient(135deg, var(--warning), #d97706); }
+        .metric-icon.info { background: linear-gradient(135deg, var(--info), #2563eb); }
+
+        .metric-value {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: var(--dark);
+            margin-bottom: 5px;
+        }
+
+        .metric-change {
+            font-size: 0.85rem;
+            color: var(--text-light);
+        }
+
+        /* Gráficos */
+        .charts-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(600px, 1fr));
+            gap: 25px;
+            margin-bottom: 25px;
+        }
+
+        .chart-card {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+        }
+
+        .chart-card.full-width {
+            grid-column: 1 / -1;
+        }
+
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+
+        .chart-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: var(--dark);
+        }
+
+        .chart-container {
+            position: relative;
+            height: 350px;
+        }
+
+        .chart-container.tall {
+            height: 450px;
+        }
+
+        .chart-container.large {
+            height: 550px;
+        }
+
+        /* Ranking */
+        .ranking-card {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        .ranking-card h2 {
+            flex-shrink: 0;
+        }
+
+        #rankingContainer {
+            flex: 1;
+            overflow-y: auto;
+            max-height: 600px;
+            padding-right: 5px;
+        }
+        
+        #rankingContainer::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        #rankingContainer::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+        
+        #rankingContainer::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 10px;
+        }
+        
+        #rankingContainer::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+
+        .btn-ranking {
+            padding: 8px 16px;
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: white;
+            color: var(--text);
+        }
+
+        .btn-ranking:hover {
+            border-color: var(--primary);
+            transform: translateY(-2px);
+        }
+
+        .btn-ranking.active {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            border-color: transparent;
+        }
+
+        .ranking-item {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            border-radius: 12px;
+            margin-bottom: 10px;
+            transition: all 0.3s;
+            background: var(--light);
+        }
+
+        .ranking-item:hover {
+            background: #f3f4f6;
+            transform: translateX(5px);
+        }
+
+        .ranking-position {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 1.1rem;
+            margin-right: 15px;
+        }
+
+        .ranking-position.gold { background: linear-gradient(135deg, #fbbf24, #f59e0b); color: white; }
+        .ranking-position.silver { background: linear-gradient(135deg, #9ca3af, #6b7280); color: white; }
+        .ranking-position.bronze { background: linear-gradient(135deg, #d97706, #b45309); color: white; }
+        .ranking-position.default { background: var(--border); color: var(--text); }
+
+        .ranking-info {
+            flex: 1;
+        }
+
+        .ranking-name {
+            font-weight: 600;
+            font-size: 1rem;
+            color: var(--dark);
+            margin-bottom: 5px;
+        }
+
+        .ranking-stats {
+            display: flex;
+            gap: 20px;
+            font-size: 0.85rem;
+            color: var(--text-light);
+        }
+
+        .ranking-value {
+            font-weight: 700;
+            font-size: 1.2rem;
+            color: var(--primary);
+        }
+
+        /* Tabela */
+        .table-card {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+            overflow-x: auto;
+        }
+
+        .table-card h2 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 25px;
+            color: var(--dark);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        thead {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+        }
+
+        /* Estilos para tabela de clientes no modal */
+        #clientesList table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+
+        #clientesList thead th {
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        #clientesList tbody td {
+            padding: 12px;
+            border-bottom: 1px solid var(--border);
+            font-size: 0.9rem;
+        }
+
+        #clientesList tbody tr:hover {
+            background: #f8f9fa;
+        }
+
+        /* Estilos para expansão/recolhimento de clientes */
+        .cliente-grupo-header {
+            cursor: pointer;
+            user-select: none;
+            transition: background 0.2s ease;
+        }
+
+        .cliente-grupo-header:hover {
+            opacity: 0.95;
+        }
+
+        .cliente-grupo-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out;
+        }
+
+        .cliente-grupo-content.expanded {
+            max-height: 2000px;
+            transition: max-height 0.5s ease-in;
+        }
+
+        .expand-icon {
+            transition: transform 0.3s ease;
+            display: inline-block;
+            margin-left: 10px;
+        }
+
+        .expand-icon.expanded {
+            transform: rotate(180deg);
+        }
+
+        #clientesInfo {
+            background: linear-gradient(135deg, rgba(87, 118, 42, 0.1), rgba(107, 143, 58, 0.1));
+            border-left: 4px solid var(--primary);
+        }
+
+        .cliente-grupo {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s;
+        }
+
+        .cliente-grupo:hover {
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            transform: translateY(-2px);
+        }
+
+        th {
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        tbody tr {
+            border-bottom: 1px solid var(--border);
+            transition: all 0.2s;
+        }
+
+        tbody tr:hover {
+            background: var(--light);
+        }
+
+        td {
+            padding: 15px;
+            font-size: 0.95rem;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .badge.success { background: rgba(16, 185, 129, 0.1); color: var(--success); }
+        .badge.warning { background: rgba(245, 158, 11, 0.1); color: var(--warning); }
+        .badge.danger { background: rgba(239, 68, 68, 0.1); color: var(--danger); }
+
+        /* Loading */
+        .loading {
+            text-align: center;
+            padding: 50px;
+            color: var(--text-light);
+        }
+
+        .spinner {
+            border: 4px solid var(--border);
+            border-top: 4px solid var(--primary);
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Overlay de carregamento */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(5px);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 10000;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+
+        .loading-overlay.show {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .loading-content {
+            background: white;
+            border-radius: 20px;
+            padding: 40px 50px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            text-align: center;
+            max-width: 400px;
+            animation: slideUp 0.3s ease;
+        }
+
+        @keyframes slideUp {
+            from {
+                transform: translateY(30px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .loading-spinner {
+            width: 60px;
+            height: 60px;
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        .loading-text {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--dark);
+            margin-bottom: 10px;
+        }
+
+        .loading-subtext {
+            font-size: 0.9rem;
+            color: var(--text-light);
+        }
+
+        /* Responsivo */
+        @media (max-width: 768px) {
+            .charts-section {
+                grid-template-columns: 1fr;
+            }
+            
+            .header h1 {
+                font-size: 1.8rem;
+            }
+            
+            .header > div:first-child {
+                width: 100%;
+            }
+            
+            .header > div:last-child {
+                position: static !important;
+                width: 100%;
+                justify-content: center;
+                margin-top: 15px;
+            }
+            
+            .metric-value {
+                font-size: 2rem;
+            }
+        }
+
+        /* Animações */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s ease-out;
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Header -->
+        <div class="header fade-in">
+            <div class="header-logo">
+                <div class="header-logo-container">
+                    <img src="logo.png" alt="Logo" onerror="this.style.display='none'">
+                </div>
+            </div>
+            <div class="header-title-center">
+                <h1><i class="fas fa-chart-line"></i> Dashboard de Processos</h1>
+                <div class="subtitle">Análise completa de fechamentos por responsável</div>
+            </div>
+            <div style="display: flex; gap: 15px; align-items: center; position: absolute; right: 40px;">
+                <div id="lastUpdate" style="text-align: right; color: var(--text-light);">
+                    <i class="fas fa-clock"></i> <span id="updateTime"></span>
+                </div>
+            </div>
+        </div>
+
+
+        <!-- Modal de Seleção de Equipes para Comparação -->
+        <div id="modalSelecaoEquipes" class="modal" style="display: none;">
+            <div class="modal-content" style="max-width: 600px;">
+                <div class="modal-header">
+                    <h2><i class="fas fa-balance-scale"></i> Comparar Equipes</h2>
+                    <button class="modal-close" onclick="fecharModalSelecaoEquipes()">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <p style="margin-bottom: 20px; color: var(--text-light);">Selecione uma ou mais equipes para comparar os clientes:</p>
+                    <div id="contadorEquipesSelecionadas" style="margin-bottom: 15px; padding: 10px; background: var(--light); border-radius: 8px; font-weight: 600; color: var(--primary);">
+                        0 equipe(s) selecionada(s)
+                    </div>
+                    <div id="equipesSelecaoContainer" style="max-height: 400px; overflow-y: auto;">
+                        <!-- Preenchido via JS -->
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn-secondary" onclick="fecharModalSelecaoEquipes()" style="background: var(--text-light); border: 2px solid var(--text-light);">
+                        <i class="fas fa-times"></i> Cancelar
+                    </button>
+                    <button class="btn-primary" onclick="compararEquipesSelecionadas()">
+                        <i class="fas fa-balance-scale"></i> Comparar
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal de Clientes -->
+        <div id="modalClientes" class="modal" style="display: none;">
+            <div class="modal-content" style="max-width: 1400px;">
+                <div class="modal-header">
+                    <h2 id="tituloModalClientes"><i class="fas fa-building"></i> Clientes com Processos em Aberto</h2>
+                    <button class="modal-close" onclick="fecharModalClientes()">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div id="clientesInfo" style="margin-bottom: 20px; padding: 15px; background: var(--light); border-radius: 10px;">
+                        <strong id="clientesTitulo"></strong>
+                    </div>
+                    <div id="clientesList" style="max-height: 600px; overflow-y: auto;">
+                        <!-- Preenchido via JS -->
+                    </div>
+                </div>
+                <div class="modal-footer" style="display: flex; justify-content: flex-end; align-items: center; gap: 10px;">
+                    <button class="btn-secondary" id="btnCompararEquipes" onclick="abrirComparacaoEquipes()" style="display: none;">
+                        <i class="fas fa-balance-scale"></i> Comparar com outras equipes
+                    </button>
+                    <button class="btn-primary" onclick="fecharModalClientes()">
+                        <i class="fas fa-times"></i> Fechar
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Overlay de Carregamento -->
+        <div id="loadingOverlay" class="loading-overlay">
+            <div class="loading-content">
+                <div class="loading-spinner"></div>
+                <div class="loading-text" id="loadingText">Carregando dados da API...</div>
+                <div class="loading-subtext" id="loadingSubtext">Aguarde enquanto buscamos as informações</div>
+            </div>
+        </div>
+
+        <!-- Filtros -->
+        <div class="filters-panel fade-in" id="filtersPanel">
+            <h3><i class="fas fa-filter"></i> Filtros</h3>
+            <div class="filters-grid">
+                <div class="filter-item" style="grid-column: 1 / -1;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                        <label>Filtrar por Equipes</label>
+                        <span id="contadorEquipes" style="font-size: 0.85rem; color: var(--primary); font-weight: 600;">
+                            <!-- Preenchido via JS -->
+                        </span>
+                    </div>
+                    <div id="equipesFiltroContainer" style="display: none;">
+                        <div style="display: flex; justify-content: flex-end; margin-bottom: 10px;">
+                            <button class="btn-primary" type="button" onclick="selecionarTodasEquipesFiltro()" style="padding: 8px 12px; font-size: 0.85rem;">
+                                <i class="fas fa-check-double"></i> Selecionar todas
+                            </button>
+                        </div>
+                        <div class="checkbox-container" id="equipesFiltroCheckboxes">
+                            <!-- Preenchido via JS -->
+                        </div>
+                        <p style="margin-top: 10px; font-size: 0.85rem; color: var(--text-light); font-style: italic;">
+                            <i class="fas fa-info-circle"></i> As equipes são carregadas automaticamente do arquivo Equipes.json.
+                        </p>
+                    </div>
+                    <div id="semEquipesMsg" style="padding: 20px; text-align: center; background: var(--light); border-radius: 10px; color: var(--text-light);">
+                        <i class="fas fa-users-slash" style="font-size: 2rem; margin-bottom: 10px; display: block;"></i>
+                        <p>Nenhuma equipe configurada.</p>
+                        <p style="font-size: 0.9rem; margin-top: 5px;">As equipes são carregadas do arquivo Equipes.json na raiz do projeto.</p>
+                    </div>
+                </div>
+                <div class="filter-item">
+                    <label>Data Inicial</label>
+                    <input type="text" id="mesInicio" placeholder="dd/mm/aaaa" data-mask="date">
+                </div>
+                <div class="filter-item">
+                    <label>Data Final</label>
+                    <input type="text" id="mesFim" placeholder="dd/mm/aaaa" data-mask="date">
+                </div>
+            </div>
+            <div class="filter-actions">
+                <button class="btn-primary" id="btnAplicarFiltros" onclick="aplicarFiltros()">
+                    <i class="fas fa-sync-alt" id="iconAplicarFiltros"></i> <span id="textAplicarFiltros">Aplicar Filtros</span>
+                </button>
+                <button class="btn-primary" onclick="limparFiltros()" style="background: var(--danger);">
+                    <i class="fas fa-times"></i> Limpar Filtros
+                </button>
+            </div>
+        </div>
+
+        <!-- Métricas -->
+        <div class="metrics-grid fade-in" id="metricsContainer">
+            <div class="metric-card">
+                <div class="metric-header">
+                    <div class="metric-title">Processos em Andamento</div>
+                    <div class="metric-icon warning">
+                        <i class="fas fa-balance-scale"></i>
+                    </div>
+                </div>
+                <div class="metric-value" id="saldoAtual">0</div>
+                <div class="metric-change">Processos pendentes</div>
+            </div>
+
+            <div class="metric-card">
+                <div class="metric-header">
+                    <div class="metric-title">Total Fechados</div>
+                    <div class="metric-icon success">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                </div>
+                <div class="metric-value" id="totalFechados">0</div>
+                <div class="metric-change">Processos finalizados</div>
+            </div>
+
+            <div class="metric-card">
+                <div class="metric-header">
+                    <div class="metric-title">Total Abertos</div>
+                    <div class="metric-icon info">
+                        <i class="fas fa-folder-open"></i>
+                    </div>
+                </div>
+                <div class="metric-value" id="totalAbertos">0</div>
+                <div class="metric-change">Processos iniciados</div>
+            </div>
+
+            <div class="metric-card">
+                <div class="metric-header">
+                    <div class="metric-title">D.I. Registradas</div>
+                    <div class="metric-icon primary">
+                        <i class="fas fa-file-alt"></i>
+                    </div>
+                </div>
+                <div class="metric-value" id="totalDI">0</div>
+                <div class="metric-change">Total de registros D.I.</div>
+            </div>
+        </div>
+
+        <!-- Gráficos -->
+        <div class="charts-section fade-in">
+            <div class="chart-card">
+                <div class="chart-header">
+                    <h3 class="chart-title"><i class="fas fa-chart-bar"></i> Distribuição de Processos em Andamento</h3>
+                </div>
+                <div class="chart-container large">
+                    <canvas id="chartPizza"></canvas>
+                </div>
+            </div>
+
+            <!-- Ranking -->
+            <div class="ranking-card fade-in">
+                <h2 id="tituloRanking" style="font-size: 1.3rem; margin-bottom: 20px;"><i class="fas fa-trophy"></i> Ranking de Equipes</h2>
+                <div style="display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap;">
+                    <button class="btn-ranking active" id="btnRankingSaldo" onclick="alterarRanking('saldo')">
+                        <i class="fas fa-balance-scale"></i> Por Processos em Andamento
+                    </button>
+                    <button class="btn-ranking" id="btnRankingDI" onclick="alterarRanking('di')">
+                        <i class="fas fa-file-alt"></i> Por D.I.
+                    </button>
+                </div>
+                <div id="rankingContainer">
+                    <!-- Preenchido via JS -->
+                </div>
+            </div>
+
+            <div class="chart-card full-width">
+                <div class="chart-header">
+                    <h3 class="chart-title"><i class="fas fa-chart-line"></i> Evolução Mensal</h3>
+                </div>
+                <div class="chart-container tall">
+                    <canvas id="chartEvolucao"></canvas>
+                </div>
+            </div>
+
+            <div class="chart-card full-width">
+                <div class="chart-header">
+                    <h3 class="chart-title"><i class="fas fa-chart-line"></i> Evolução Mensal por Equipe</h3>
+                </div>
+                <div style="padding: 20px; border-bottom: 2px solid var(--border); background: var(--light);">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px;">
+                        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                            <button class="btn-ranking active" id="btnEvolucaoSaldo" onclick="alterarEvolucaoPorEquipe('saldo')">
+                                <i class="fas fa-balance-scale"></i> Processos em Andamento
+                            </button>
+                            <button class="btn-ranking" id="btnEvolucaoDI" onclick="alterarEvolucaoPorEquipe('di')">
+                                <i class="fas fa-file-alt"></i> D.I.
+                            </button>
+                        </div>
+                        <div style="display: flex; gap: 10px; align-items: center;">
+                            <label style="font-weight: 600; color: var(--dark);">
+                                <i class="fas fa-users"></i> Selecionar Equipes/Operacionais:
+                            </label>
+                            <button class="btn-secondary" onclick="selecionarTodasEquipesEvolucao()" style="padding: 8px 15px; font-size: 0.9rem;">
+                                <i class="fas fa-check-double"></i> Selecionar Todas
+                            </button>
+                        </div>
+                    </div>
+                    <div id="equipesEvolucaoContainer" style="display: flex; flex-wrap: wrap; gap: 10px; max-height: 120px; overflow-y: auto; padding: 10px; background: white; border-radius: 8px; border: 2px solid var(--border);">
+                        <!-- Preenchido via JS -->
+                    </div>
+                </div>
+                <div class="chart-container tall">
+                    <canvas id="chartEvolucaoPorEquipe"></canvas>
+                </div>
+            </div>
+
+            <div class="chart-card">
+                <div class="chart-header">
+                    <h3 class="chart-title"><i class="fas fa-chart-area"></i> Comparação Abertos vs Fechados</h3>
+                </div>
+                <div class="chart-container">
+                    <canvas id="chartComparacao"></canvas>
+                </div>
+            </div>
+
+            <div class="chart-card">
+                <div class="chart-header">
+                    <h3 class="chart-title"><i class="fas fa-chart-bar"></i> Processos em Andamento</h3>
+                </div>
+                <div class="chart-container">
+                    <canvas id="chartSaldo"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabela -->
+        <div class="table-card fade-in">
+            <h2><i class="fas fa-table"></i> Resumo Detalhado</h2>
+            <table id="tabelaResumo">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Responsável</th>
+                        <th>Total Abertos</th>
+                        <th>Total Fechados</th>
+                        <th>Processos em Andamento</th>
+                        <th>D.I.</th>
+                    </tr>
+                </thead>
+                <tbody id="tabelaBody">
+                    <!-- Preenchido via JS -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        let dadosOriginais = [];
+        let dadosFiltrados = [];
+        let charts = {};
+        let ultimasDatasAPI = null; // Rastrear as últimas datas usadas na API
+        let chartsClientes = {}; // Gráficos de clientes
+        let equipes = {}; // {equipeNome: [responsaveis]}
+        let clientesData = []; // Dados dos clientes
+        let equipesDisponiveis = []; // Lista de equipes para comparação
+        let equipesSelecionadas = []; // Equipes selecionadas para comparação
+        let equipeAtualVisualizacao = null; // Equipe atualmente sendo visualizada
+        let equipesSelecionadasEvolucao = []; // Equipes selecionadas para o gráfico de evolução por equipe
+        // Estado do filtro de equipes: null => todas; array => apenas essas equipes
+        let equipesSelecionadasFiltro = null;
+        
+
+        // Carregar equipes do arquivo Equipes.json na raiz
+        async function carregarEquipes() {
+            try {
+                const response = await fetch('Equipes.json');
+                if (response.ok) {
+                    const equipesJSON = await response.json();
+                    // Validar estrutura do JSON
+                    if (typeof equipesJSON === 'object' && !Array.isArray(equipesJSON)) {
+                        equipes = equipesJSON;
+                        console.log('Equipes carregadas do arquivo Equipes.json:', equipes);
+                    } else {
+                        console.error('Formato inválido no arquivo Equipes.json. Esperado um objeto.');
+                        equipes = {};
+                    }
+                } else {
+                    console.warn('Não foi possível carregar Equipes.json. Usando equipes vazias.');
+                    equipes = {};
+                }
+            } catch (error) {
+                console.error('Erro ao carregar equipes do arquivo Equipes.json:', error);
+                // Tentar usar localStorage como fallback
+                const equipesSalvas = localStorage.getItem('dashboardEquipes');
+                if (equipesSalvas) {
+                    try {
+                        equipes = JSON.parse(equipesSalvas);
+                        console.log('Equipes carregadas do localStorage (fallback)');
+                    } catch (e) {
+                        console.error('Erro ao carregar equipes do localStorage:', e);
+                        equipes = {};
+                    }
+                } else {
+                    equipes = {};
+                }
+            }
+        }
+
+        // Fechar modal ao clicar fora
+        window.onclick = function(event) {
+            const modalClientes = document.getElementById('modalClientes');
+            if (event.target === modalClientes) {
+                fecharModalClientes();
+            }
+        }
+
+        // Processar dados de clientes da API
+        function processarClientesAPI(dadosAPI) {
+            // Limpar dados anteriores
+            clientesData = [];
+            
+            if (!dadosAPI) {
+                console.warn('processarClientesAPI: dadosAPI é null ou undefined');
+                return;
+            }
+            
+            console.log('processarClientesAPI: Recebido dadosAPI:', dadosAPI);
+            console.log('processarClientesAPI: dadosAPI.analitico existe?', 'analitico' in dadosAPI);
+            console.log('processarClientesAPI: dadosAPI.analitico:', dadosAPI.analitico);
+            console.log('processarClientesAPI: Tipo de dadosAPI.analitico:', typeof dadosAPI.analitico);
+            console.log('processarClientesAPI: É array?', Array.isArray(dadosAPI.analitico));
+            
+            // A API retorna 'analitico' - acessar diretamente
+            let dadosAnaliticos = null;
+            
+            // Primeiro, tentar acessar 'analitico' diretamente
+            if (dadosAPI.analitico !== undefined && dadosAPI.analitico !== null) {
+                if (Array.isArray(dadosAPI.analitico)) {
+                    dadosAnaliticos = dadosAPI.analitico;
+                    console.log('processarClientesAPI: Encontrado analitico como array com', dadosAnaliticos.length, 'itens');
+                } else {
+                    console.warn('processarClientesAPI: analitico existe mas não é um array:', typeof dadosAPI.analitico);
+                }
+            }
+            
+            // Fallback para 'clientes' (compatibilidade)
+            if (!dadosAnaliticos && dadosAPI.clientes !== undefined && Array.isArray(dadosAPI.clientes)) {
+                dadosAnaliticos = dadosAPI.clientes;
+                console.log('processarClientesAPI: Usando clientes como fallback com', dadosAnaliticos.length, 'itens');
+            }
+            
+            if (!dadosAnaliticos || !Array.isArray(dadosAnaliticos) || dadosAnaliticos.length === 0) {
+                console.warn('processarClientesAPI: Nenhum dado analítico encontrado na API');
+                console.warn('processarClientesAPI: Estrutura completa do objeto:', JSON.stringify(dadosAPI, null, 2));
+                return;
+            }
+            
+            // Processar cada item dos dados analíticos
+            dadosAnaliticos.forEach((item, index) => {
+                if (item && typeof item === 'object') {
+                    clientesData.push({
+                        RESPONSAVEL: item.RESPONSAVEL || '',
+                        DATA_ABERTURA: item.PRI_DTA_ABERTURA || '',
+                        CLIENTE: item.DPE_NOM_PESSOA_LIG || '',
+                        REFERENCIA: item.PRI_ESP_REFCLIENTE || ''
+                    });
+                } else {
+                    console.warn(`processarClientesAPI: Item ${index} não é um objeto válido:`, item);
+                }
+            });
+            
+            console.log(`processarClientesAPI: ${clientesData.length} clientes processados com sucesso`);
+            
+            if (clientesData.length === 0) {
+                console.warn('processarClientesAPI: Nenhum cliente válido foi processado após iteração');
+            }
+        }
+
+
+        // Carregar dados de clientes da API automaticamente
+        async function carregarClientes() {
+            try {
+                const { dataInicio, dataFim } = obterDatasPadrao();
+                const urlAPI = `https://n8n.grupobgr.com.br/webhook/a7b244fa-acc4-46ce-90b8-fe5ac882d0e9?data_inicio=${dataInicio}&data_fim=${dataFim}`;
+                
+                const response = await fetch(urlAPI);
+                if (response.ok) {
+                    const dadosAPI = await response.json();
+                    
+                    // A API retorna um array com dois objetos:
+                    // dadosAPI[0] contém { consolidado: [...] }
+                    // dadosAPI[1] contém { analitico: [...] }
+                    if (Array.isArray(dadosAPI) && dadosAPI.length >= 2) {
+                        // Processar dados analíticos (clientes) - posição 1
+                        if (dadosAPI[1] && dadosAPI[1].analitico) {
+                            processarClientesAPI(dadosAPI[1]);
+                            if (clientesData.length > 0) {
+                                // ${clientesData.length} clientes carregados da API automaticamente
+                            }
+                        }
+                    } else {
+                        throw new Error('Formato de resposta da API inválido');
+                    }
+                } else {
+                    throw new Error(`Erro HTTP: ${response.status}`);
+                }
+            } catch (error) {
+                console.error('Erro ao carregar clientes da API:', error);
+                console.error('Erro ao carregar da API:', error.message);
+            }
+        }
+
+
+        // Abrir modal de seleção de equipes para comparação
+        function abrirModalSelecaoEquipes(equipeInicial = null) {
+            // Obter lista de equipes disponíveis
+            const dadosAgrupados = agruparDadosPorEquipe(dadosFiltrados);
+            equipesDisponiveis = dadosAgrupados.map(e => ({
+                nome: e.NOME,
+                membros: Array.isArray(e.MEMBROS) ? e.MEMBROS : Array.from(e.MEMBROS || [])
+            }));
+
+            if (equipesDisponiveis.length === 0) {
+                alert('Nenhuma equipe disponível para comparação.');
+                return;
+            }
+
+            // Filtrar equipes já exibidas (não mostrar como selecionadas, apenas marcar como já exibidas)
+            const nomesJaExibidas = equipesJaExibidas.map(e => e.nome);
+            
+            // Se uma equipe inicial foi passada e não está nas já exibidas, selecioná-la
+            equipesSelecionadas = [];
+            
+            // Inicializar seleção vazia (as equipes já exibidas serão marcadas visualmente mas não selecionadas)
+
+            // Preencher container de seleção
+            const container = document.getElementById('equipesSelecaoContainer');
+            let html = '';
+            
+            equipesDisponiveis.forEach((equipe, index) => {
+                const isSelected = equipesSelecionadas.some(e => e.nome === equipe.nome);
+                const jaExibida = nomesJaExibidas.includes(equipe.nome);
+                const isDisabled = jaExibida;
+                
+                html += `
+                    <div style="padding: 15px; border: 2px solid ${isSelected ? 'var(--primary)' : jaExibida ? 'rgba(16, 185, 129, 0.5)' : 'var(--border)'}; border-radius: 10px; margin-bottom: 10px; background: ${isSelected ? 'rgba(87, 118, 42, 0.1)' : jaExibida ? 'rgba(16, 185, 129, 0.05)' : 'white'}; cursor: ${isDisabled ? 'not-allowed' : 'pointer'}; transition: all 0.3s; opacity: ${isDisabled ? '0.7' : '1'};" 
+                         onclick="${isDisabled ? '' : `toggleEquipeSelecao(${index})`}">
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <input type="checkbox" id="eqSel_${index}" ${isSelected ? 'checked' : ''} ${isDisabled ? 'disabled' : ''}
+                                   onclick="event.stopPropagation(); ${isDisabled ? '' : `toggleEquipeSelecao(${index})`}" 
+                                   style="width: 20px; height: 20px; cursor: ${isDisabled ? 'not-allowed' : 'pointer'};">
+                            <div style="flex: 1;">
+                                <strong style="font-size: 1rem; color: var(--dark);">${equipe.nome}${jaExibida ? ' <span style="font-size: 0.8rem; color: rgba(16, 185, 129, 1);">(já exibida)</span>' : ''}</strong>
+                                <div style="font-size: 0.85rem; color: var(--text-light); margin-top: 4px;">
+                                    ${equipe.membros.length} membro(s)
+                                </div>
+                            </div>
+                            ${isSelected ? '<i class="fas fa-check-circle" style="color: var(--primary); font-size: 1.2rem;"></i>' : jaExibida ? '<i class="fas fa-eye" style="color: rgba(16, 185, 129, 1); font-size: 1.2rem;"></i>' : ''}
+                        </div>
+                    </div>
+                `;
+            });
+
+            container.innerHTML = html || '<p style="text-align: center; color: var(--text-light); padding: 20px;">Nenhuma equipe disponível.</p>';
+            document.getElementById('modalSelecaoEquipes').style.display = 'block';
+        }
+
+        // Toggle seleção de equipe
+        function toggleEquipeSelecao(index) {
+            const equipe = equipesDisponiveis[index];
+            const nomesJaExibidas = equipesJaExibidas.map(e => e.nome);
+            
+            // Não permitir selecionar equipes já exibidas
+            if (nomesJaExibidas.includes(equipe.nome)) {
+                return;
+            }
+            
+            const indexSelecionada = equipesSelecionadas.findIndex(e => e.nome === equipe.nome);
+            
+            if (indexSelecionada >= 0) {
+                equipesSelecionadas.splice(indexSelecionada, 1);
+            } else {
+                equipesSelecionadas.push(equipe);
+            }
+            
+            // Atualizar visual
+            const container = document.getElementById('equipesSelecaoContainer');
+            let html = '';
+            
+            equipesDisponiveis.forEach((eq, idx) => {
+                const isSelected = equipesSelecionadas.some(e => e.nome === eq.nome);
+                const jaExibida = nomesJaExibidas.includes(eq.nome);
+                const isDisabled = jaExibida;
+                
+                html += `
+                    <div style="padding: 15px; border: 2px solid ${isSelected ? 'var(--primary)' : jaExibida ? 'rgba(16, 185, 129, 0.5)' : 'var(--border)'}; border-radius: 10px; margin-bottom: 10px; background: ${isSelected ? 'rgba(87, 118, 42, 0.1)' : jaExibida ? 'rgba(16, 185, 129, 0.05)' : 'white'}; cursor: ${isDisabled ? 'not-allowed' : 'pointer'}; transition: all 0.3s; opacity: ${isDisabled ? '0.7' : '1'};" 
+                         onclick="${isDisabled ? '' : `toggleEquipeSelecao(${idx})`}">
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <input type="checkbox" id="eqSel_${idx}" ${isSelected ? 'checked' : ''} ${isDisabled ? 'disabled' : ''}
+                                   onclick="event.stopPropagation(); ${isDisabled ? '' : `toggleEquipeSelecao(${idx})`}" 
+                                   style="width: 20px; height: 20px; cursor: ${isDisabled ? 'not-allowed' : 'pointer'};">
+                            <div style="flex: 1;">
+                                <strong style="font-size: 1rem; color: var(--dark);">${eq.nome}${jaExibida ? ' <span style="font-size: 0.8rem; color: rgba(16, 185, 129, 1);">(já exibida)</span>' : ''}</strong>
+                                <div style="font-size: 0.85rem; color: var(--text-light); margin-top: 4px;">
+                                    ${eq.membros.length} membro(s)
+                                </div>
+                            </div>
+                            ${isSelected ? '<i class="fas fa-check-circle" style="color: var(--primary); font-size: 1.2rem;"></i>' : jaExibida ? '<i class="fas fa-eye" style="color: rgba(16, 185, 129, 1); font-size: 1.2rem;"></i>' : ''}
+                        </div>
+                    </div>
+                `;
+            });
+            
+            container.innerHTML = html;
+            
+            // Atualizar contador
+            const contador = document.getElementById('contadorEquipesSelecionadas');
+            if (contador) {
+                contador.textContent = `${equipesSelecionadas.length} equipe(s) selecionada(s)`;
+            }
+        }
+
+        // Fechar modal de seleção
+        function fecharModalSelecaoEquipes() {
+            document.getElementById('modalSelecaoEquipes').style.display = 'none';
+            equipesSelecionadas = [];
+        }
+
+        // Comparar equipes selecionadas
+        function compararEquipesSelecionadas() {
+            if (equipesSelecionadas.length === 0) {
+                alert('Selecione pelo menos uma equipe para comparar.');
+                return;
+            }
+
+            fecharModalSelecaoEquipes();
+            
+            // Adicionar equipes selecionadas às já exibidas (sobrepor)
+            const novasEquipes = equipesSelecionadas.filter(eq => 
+                !equipesJaExibidas.some(e => e.nome === eq.nome)
+            );
+            
+            if (novasEquipes.length === 0) {
+                alert('Todas as equipes selecionadas já estão sendo exibidas.');
+                return;
+            }
+            
+            equipesJaExibidas = [...equipesJaExibidas, ...novasEquipes];
+            abrirModalClientesComparacao(equipesJaExibidas);
+        }
+
+        // Abrir modal de clientes com comparação de múltiplas equipes
+        function abrirModalClientesComparacao(equipesParaComparar) {
+            // Os dados já devem estar carregados no carregamento inicial da API
+            if (!clientesData || !Array.isArray(clientesData) || clientesData.length === 0) {
+                alert('Dados de clientes ainda não foram carregados da API.\n\nPor favor, clique em "Aplicar Filtros" para carregar os dados.');
+                return;
+            }
+
+            // Fechar modal de seleção se estiver aberto
+            fecharModalSelecaoEquipes();
+            
+            // Manter o botão de comparar visível para permitir adicionar mais equipes
+            document.getElementById('btnCompararEquipes').style.display = 'block';
+            
+            // Atualizar equipes já exibidas
+            equipesJaExibidas = equipesParaComparar;
+
+            // Processar dados de cada equipe
+            const dadosPorEquipe = equipesParaComparar.map(equipe => {
+                // Normalizar responsáveis para comparação
+                const responsaveisNormalizados = equipe.membros.map(r => String(r || '').toUpperCase().trim()).filter(r => r);
+                const responsaveisSetComparacao = new Set(responsaveisNormalizados);
+                
+                const clientesFiltrados = clientesData.filter(c => {
+                    const responsavelCliente = String(c.RESPONSAVEL || '').toUpperCase().trim();
+                    return responsaveisSetComparacao.has(responsavelCliente);
+                });
+
+                // Agrupar clientes por nome
+                const clientesAgrupados = {};
+                clientesFiltrados.forEach(cliente => {
+                    const nomeCliente = cliente.CLIENTE.trim();
+                    if (!clientesAgrupados[nomeCliente]) {
+                        clientesAgrupados[nomeCliente] = {
+                            nome: nomeCliente,
+                            processos: [],
+                            totalProcessos: 0
+                        };
+                    }
+                    clientesAgrupados[nomeCliente].processos.push({
+                        referencia: cliente.REFERENCIA,
+                        dataAbertura: cliente.DATA_ABERTURA,
+                        responsavel: cliente.RESPONSAVEL
+                    });
+                    clientesAgrupados[nomeCliente].totalProcessos++;
+                });
+
+                const clientesArray = Object.values(clientesAgrupados).sort((a, b) => {
+                    return b.totalProcessos - a.totalProcessos;
+                });
+
+                return {
+                    nome: equipe.nome,
+                    totalProcessos: clientesFiltrados.length,
+                    totalClientesUnicos: clientesArray.length,
+                    clientes: clientesArray
+                };
+            });
+
+            // Calcular totais
+            const totalProcessos = dadosPorEquipe.reduce((sum, e) => sum + e.totalProcessos, 0);
+            const totalClientesUnicos = new Set(
+                dadosPorEquipe.flatMap(e => e.clientes.map(c => c.nome))
+            ).size;
+
+            // Atualizar título do modal e informações
+            const nomesEquipes = dadosPorEquipe.map(e => e.nome).join(', ');
+            document.getElementById('tituloModalClientes').innerHTML = `<i class="fas fa-balance-scale"></i> Comparação de ${dadosPorEquipe.length} Equipe(s) - Clientes com Processos em Aberto`;
+            document.getElementById('clientesTitulo').innerHTML = 
+                `<strong>Comparação de ${dadosPorEquipe.length} equipe(s):</strong> ${nomesEquipes}<br>
+                 <span style="font-size: 0.9rem; font-weight: normal;">Total: ${totalClientesUnicos} cliente(s) único(s) com ${totalProcessos} processo(s) em aberto</span>`;
+
+            // Preencher lista comparativa
+            const container = document.getElementById('clientesList');
+            if (totalProcessos === 0) {
+                container.innerHTML = '<p style="text-align: center; color: var(--text-light); padding: 40px;">Nenhum cliente encontrado para as equipes selecionadas.</p>';
+            } else {
+                let html = '';
+                
+                // Exibir cada equipe em uma seção separada
+                dadosPorEquipe.forEach((dadosEquipe, eqIndex) => {
+                    const coresEquipe = [
+                        'linear-gradient(135deg, #57762a, #6b8f3a)',
+                        'linear-gradient(135deg, #f093fb, #f5576c)',
+                        'linear-gradient(135deg, #4facfe, #00f2fe)',
+                        'linear-gradient(135deg, #43e97b, #38f9d7)',
+                        'linear-gradient(135deg, #fa709a, #fee140)'
+                    ];
+                    const corEquipe = coresEquipe[eqIndex % coresEquipe.length];
+
+                    html += `<div style="margin-bottom: 40px; border: 3px solid var(--border); border-radius: 15px; overflow: hidden; background: white;">`;
+                    html += `<div style="background: ${corEquipe}; color: white; padding: 20px;">`;
+                    html += `<h3 style="margin: 0; font-size: 1.3rem; font-weight: 700;">${dadosEquipe.nome}</h3>`;
+                    html += `<div style="margin-top: 10px; font-size: 0.95rem; opacity: 0.95;">`;
+                    html += `${dadosEquipe.totalClientesUnicos} cliente(s) único(s) • ${dadosEquipe.totalProcessos} processo(s) em aberto`;
+                    html += `</div>`;
+                    html += `</div>`;
+                    
+                    if (dadosEquipe.clientes.length === 0) {
+                        html += `<div style="padding: 30px; text-align: center; color: var(--text-light);">Nenhum cliente encontrado para esta equipe.</div>`;
+                    } else {
+                        dadosEquipe.clientes.forEach((grupoCliente, clienteIndex) => {
+                            grupoCliente.processos.sort((a, b) => {
+                                const dataA = new Date(a.dataAbertura);
+                                const dataB = new Date(b.dataAbertura);
+                                return dataB - dataA;
+                            });
+
+                            const clienteIdComparacao = `cliente-comp-${eqIndex}-${clienteIndex}`;
+                            html += `<div class="cliente-grupo" style="margin: 15px; border: 2px solid var(--border); border-radius: 12px; overflow: hidden; background: white;">`;
+                            html += `<div class="cliente-grupo-header" onclick="toggleClienteExpand('${clienteIdComparacao}')" style="background: var(--light); padding: 12px 15px; display: flex; justify-content: space-between; align-items: center; cursor: pointer;">`;
+                            html += `<div style="flex: 1; display: flex; align-items: center;">`;
+                            html += `<div style="flex: 1;">`;
+                            html += `<h4 style="margin: 0; font-size: 1rem; font-weight: 600; color: var(--dark);">${grupoCliente.nome}</h4>`;
+                            html += `<div style="font-size: 0.8rem; color: var(--text-light); margin-top: 4px;">${grupoCliente.totalProcessos} processo(s)</div>`;
+                            html += `</div>`;
+                            html += `<i class="fas fa-chevron-down expand-icon" id="icon-${clienteIdComparacao}" style="font-size: 0.9rem; margin-left: 10px;"></i>`;
+                            html += `</div>`;
+                            html += `<div style="background: var(--primary); color: white; padding: 6px 12px; border-radius: 8px; font-weight: 700; font-size: 1rem;">${grupoCliente.totalProcessos}</div>`;
+                            html += `</div>`;
+                            
+                            html += `<div class="cliente-grupo-content" id="${clienteIdComparacao}" style="padding: 0;">`;
+                            html += `<table style="width: 100%; border-collapse: collapse;">`;
+                            html += `<thead><tr style="background: var(--light);">`;
+                            html += `<th style="padding: 10px; text-align: left; font-weight: 600; color: var(--dark); font-size: 0.85rem;">Referência</th>`;
+                            html += `<th style="padding: 10px; text-align: left; font-weight: 600; color: var(--dark); font-size: 0.85rem;">Data de Abertura</th>`;
+                            html += `<th style="padding: 10px; text-align: left; font-weight: 600; color: var(--dark); font-size: 0.85rem;">Responsável</th>`;
+                            html += `</tr></thead><tbody>`;
+                            
+                            grupoCliente.processos.forEach((processo, procIndex) => {
+                                const dataFormatada = processo.dataAbertura ? 
+                                    new Date(processo.dataAbertura).toLocaleDateString('pt-BR') : '-';
+                                html += `<tr style="border-bottom: 1px solid var(--border); ${procIndex % 2 === 0 ? 'background: white;' : 'background: #fafafa;'}">`;
+                                html += `<td style="padding: 10px; font-size: 0.85rem;">${processo.referencia}</td>`;
+                                html += `<td style="padding: 10px; font-size: 0.85rem;">${dataFormatada}</td>`;
+                                html += `<td style="padding: 10px; font-size: 0.85rem;">${processo.responsavel}</td>`;
+                                html += `</tr>`;
+                            });
+                            
+                            html += `</tbody></table>`;
+                            html += `</div>`;
+                            html += `</div>`;
+                        });
+                    }
+                    
+                    html += `</div>`;
+                });
+                
+                container.innerHTML = html;
+            }
+
+            document.getElementById('modalClientes').style.display = 'block';
+        }
+
+        // Abrir modal de clientes (versão original para uma equipe)
+        function abrirModalClientes(equipeNome, responsaveis) {
+            // Verificar se clientesData existe e tem dados
+            // Os dados já devem estar carregados no carregamento inicial da API (objeto analitico)
+            // Não fazer nova requisição - usar os dados já carregados
+            if (!clientesData || !Array.isArray(clientesData) || clientesData.length === 0) {
+                console.warn('abrirModalClientes: clientesData está vazio. Os dados devem ser carregados no início.');
+                alert('Dados de clientes ainda não foram carregados da API.\n\nPor favor, clique em "Aplicar Filtros" para carregar os dados.');
+                return;
+            }
+
+            // Normalizar responsáveis para array
+            const responsaveisArray = Array.isArray(responsaveis) ? responsaveis : Array.from(responsaveis || []);
+
+            // Armazenar equipe atual
+            equipeAtualVisualizacao = {
+                nome: equipeNome,
+                membros: responsaveisArray
+            };
+
+            // Inicializar lista de equipes já exibidas com a equipe atual
+            equipesJaExibidas = [equipeAtualVisualizacao];
+
+            // Mostrar botão de comparar
+            document.getElementById('btnCompararEquipes').style.display = 'block';
+
+            // Filtrar clientes pelos responsáveis da equipe
+            // Os dados já estão disponíveis em clientesData (carregados no início da API)
+            // Não fazer nova requisição - usar os dados já carregados do objeto analitico
+            console.log('abrirModalClientes DEBUG:');
+            console.log('- equipeNome:', equipeNome);
+            console.log('- responsaveisArray:', responsaveisArray);
+            console.log('- responsaveisArray (normalizados):', responsaveisArray.map(r => String(r).toUpperCase().trim()));
+            console.log('- clientesData.length:', clientesData.length);
+            console.log('- Primeiros 3 clientes:', clientesData.slice(0, 3));
+            console.log('- Responsáveis únicos em clientesData:', [...new Set(clientesData.map(c => c.RESPONSAVEL))]);
+            console.log('- Responsáveis únicos em clientesData (normalizados):', [...new Set(clientesData.map(c => String(c.RESPONSAVEL || '').toUpperCase().trim()))]);
+            
+            // Normalizar responsáveis para comparação (garantir que são strings e normalizar)
+            const responsaveisNormalizados = responsaveisArray.map(r => String(r || '').toUpperCase().trim()).filter(r => r);
+            const responsaveisSet = new Set(responsaveisNormalizados);
+            
+            console.log('- responsaveisSet:', Array.from(responsaveisSet));
+            
+            // Filtrar clientes pelos responsáveis da equipe
+            const clientesFiltrados = clientesData.filter(c => {
+                const responsavelCliente = String(c.RESPONSAVEL || '').toUpperCase().trim();
+                const match = responsaveisSet.has(responsavelCliente);
+                if (match) {
+                    console.log('Match encontrado:', responsavelCliente);
+                }
+                return match;
+            });
+            
+            console.log('abrirModalClientes: clientesFiltrados encontrados:', clientesFiltrados.length, 'de', clientesData.length, 'clientes totais');
+            console.log('- clientesFiltrados:', clientesFiltrados.slice(0, 5));
+
+            // Agrupar clientes por nome do cliente
+            const clientesAgrupados = {};
+            clientesFiltrados.forEach(cliente => {
+                const nomeCliente = (cliente.CLIENTE || '').trim();
+                if (!nomeCliente) {
+                    console.warn('Cliente sem nome encontrado:', cliente);
+                    return; // Pular clientes sem nome
+                }
+                if (!clientesAgrupados[nomeCliente]) {
+                    clientesAgrupados[nomeCliente] = {
+                        nome: nomeCliente,
+                        processos: [],
+                        totalProcessos: 0
+                    };
+                }
+                clientesAgrupados[nomeCliente].processos.push({
+                    referencia: cliente.REFERENCIA || '',
+                    dataAbertura: cliente.DATA_ABERTURA || '',
+                    responsavel: cliente.RESPONSAVEL || ''
+                });
+                clientesAgrupados[nomeCliente].totalProcessos++;
+            });
+            
+            console.log('abrirModalClientes: clientesAgrupados:', Object.keys(clientesAgrupados).length, 'clientes únicos');
+
+            // Converter para array e ordenar por quantidade de processos (maior primeiro)
+            const clientesArray = Object.values(clientesAgrupados).sort((a, b) => {
+                return b.totalProcessos - a.totalProcessos;
+            });
+
+            // Atualizar título do modal e informações
+            document.getElementById('tituloModalClientes').innerHTML = `<i class="fas fa-building"></i> ${equipeNome} - Clientes com Processos em Aberto`;
+            const totalProcessos = clientesFiltrados.length;
+            const totalClientesUnicos = clientesArray.length;
+            document.getElementById('clientesTitulo').innerHTML = 
+                `<strong>${equipeNome}:</strong> ${totalClientesUnicos} cliente(s) único(s) com ${totalProcessos} processo(s) em aberto`;
+
+            // Preencher lista agrupada
+            const container = document.getElementById('clientesList');
+            if (clientesArray.length === 0) {
+                container.innerHTML = '<p style="text-align: center; color: var(--text-light); padding: 40px;">Nenhum cliente encontrado para esta equipe.</p>';
+            } else {
+                let html = '';
+                
+                clientesArray.forEach((grupoCliente, grupoIndex) => {
+                    // Ordenar processos do cliente por data (mais recente primeiro)
+                    grupoCliente.processos.sort((a, b) => {
+                        const dataA = new Date(a.dataAbertura);
+                        const dataB = new Date(b.dataAbertura);
+                        return dataB - dataA;
+                    });
+
+                    const clienteId = `cliente-${grupoIndex}`;
+                    html += `<div class="cliente-grupo" style="margin-bottom: 25px; border: 2px solid var(--border); border-radius: 12px; overflow: hidden; background: white;">`;
+                    html += `<div class="cliente-grupo-header" onclick="toggleClienteExpand('${clienteId}')" style="background: linear-gradient(135deg, var(--primary), var(--secondary)); color: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center;">`;
+                    html += `<div style="flex: 1; display: flex; align-items: center;">`;
+                    html += `<div style="flex: 1;">`;
+                    html += `<h4 style="margin: 0; font-size: 1.1rem; font-weight: 600;">${grupoCliente.nome}</h4>`;
+                    html += `<div style="font-size: 0.85rem; opacity: 0.9; margin-top: 5px;">${grupoCliente.totalProcessos} processo(s) em aberto</div>`;
+                    html += `</div>`;
+                    html += `<i class="fas fa-chevron-down expand-icon" id="icon-${clienteId}" style="font-size: 1rem; margin-left: 15px;"></i>`;
+                    html += `</div>`;
+                    html += `<div style="background: rgba(255,255,255,0.2); padding: 8px 15px; border-radius: 8px; font-weight: 700; font-size: 1.2rem;">${grupoCliente.totalProcessos}</div>`;
+                    html += `</div>`;
+                    
+                    html += `<div class="cliente-grupo-content" id="${clienteId}" style="padding: 0;">`;
+                    html += `<table style="width: 100%; border-collapse: collapse;">`;
+                    html += `<thead><tr style="background: var(--light);">`;
+                    html += `<th style="padding: 12px; text-align: left; font-weight: 600; color: var(--dark);">Referência</th>`;
+                    html += `<th style="padding: 12px; text-align: left; font-weight: 600; color: var(--dark);">Data de Abertura</th>`;
+                    html += `<th style="padding: 12px; text-align: left; font-weight: 600; color: var(--dark);">Responsável</th>`;
+                    html += `</tr></thead><tbody>`;
+                    
+                    grupoCliente.processos.forEach((processo, procIndex) => {
+                        const dataFormatada = processo.dataAbertura ? 
+                            new Date(processo.dataAbertura).toLocaleDateString('pt-BR') : '-';
+                        html += `<tr style="border-bottom: 1px solid var(--border); ${procIndex % 2 === 0 ? 'background: white;' : 'background: #fafafa;'}">`;
+                        html += `<td style="padding: 12px;">${processo.referencia}</td>`;
+                        html += `<td style="padding: 12px;">${dataFormatada}</td>`;
+                        html += `<td style="padding: 12px;">${processo.responsavel}</td>`;
+                        html += `</tr>`;
+                    });
+                    
+                    html += `</tbody></table>`;
+                    html += `</div>`;
+                    html += `</div>`;
+                });
+                
+                container.innerHTML = html;
+            }
+
+            document.getElementById('modalClientes').style.display = 'block';
+        }
+
+        // Função para expandir/recolher cliente
+        function toggleClienteExpand(clienteId) {
+            const content = document.getElementById(clienteId);
+            const icon = document.getElementById(`icon-${clienteId}`);
+            
+            if (content) {
+                content.classList.toggle('expanded');
+                if (icon) {
+                    icon.classList.toggle('expanded');
+                }
+            }
+        }
+
+        // Fechar modal de clientes
+        function fecharModalClientes() {
+            document.getElementById('modalClientes').style.display = 'none';
+            equipeAtualVisualizacao = null;
+            equipesSelecionadas = [];
+            equipesJaExibidas = [];
+            document.getElementById('btnCompararEquipes').style.display = 'none';
+            // Resetar título
+            document.getElementById('tituloModalClientes').innerHTML = '<i class="fas fa-building"></i> Clientes com Processos em Aberto';
+        }
+
+        // Abrir modal de comparação a partir do modal de clientes atual
+        function abrirComparacaoEquipes() {
+            if (!equipeAtualVisualizacao) {
+                alert('Erro: nenhuma equipe está sendo visualizada.');
+                return;
+            }
+
+            // Abrir modal de seleção com a equipe atual já selecionada
+            abrirModalSelecaoEquipes(equipeAtualVisualizacao);
+        }
+
+        // Atualizar hora
+        function atualizarHora() {
+            const agora = new Date();
+            document.getElementById('updateTime').textContent = agora.toLocaleString('pt-BR');
+        }
+        atualizarHora();
+        setInterval(atualizarHora, 1000);
+
+
+        // Processar dados JSON da API
+        function processarDadosAPI(dadosAPI) {
+            if (!dadosAPI || !dadosAPI.consolidado || !Array.isArray(dadosAPI.consolidado)) {
+                alert('Formato de dados inválido da API!');
+                return;
+            }
+            
+            dadosOriginais = [];
+            
+            dadosAPI.consolidado.forEach(item => {
+                dadosOriginais.push({
+                    RESPONSAVEL: item.RESPONSAVEL || '',
+                    MES: item.MES_REF || '',
+                    ABERTOS: parseInt(item.ABERTOS) || 0,
+                    FECHADOS: parseInt(item.FECHADOS) || 0,
+                    REGISTRO_DI: parseInt(item.REGISTRO_DI) || 0,
+                    ACUMULADO_ABERTOS: parseInt(item.ACUMULADO_ABERTOS) || 0,
+                    ACUMULADO_FECHADOS: parseInt(item.ACUMULADO_FECHADOS) || 0,
+                    ACUMULADO_REGISTRO_DI: parseInt(item.ACUMULADO_REGISTRO_DI) || 0,
+                    SALDO_ACUMULADO: parseInt(item.SALDO_ACUMULADO) || 0,
+                    SALDO_EM_ABERTO: parseInt(item.SALDO_EM_ABERTO) || 0
+                });
+            });
+            
+            if (dadosOriginais.length === 0) {
+                alert('Nenhum dado válido encontrado na API!');
+                return;
+            }
+            
+            dadosFiltrados = [...dadosOriginais];
+            // Painel de filtros já está visível, apenas inicializar
+            inicializarFiltros();
+            atualizarDashboard();
+        }
+
+
+        // Obter datas padrão para a API (último ano)
+        function obterDatasPadrao() {
+            const hoje = new Date();
+            const anoAtual = hoje.getFullYear();
+            const dataInicio = `${anoAtual}-01-01`;
+            const dataFim = `${anoAtual}-12-31`;
+            return { dataInicio, dataFim };
+        }
+
+        // Obter datas dos filtros do dashboard (sempre em YYYY-MM-DD)
+        // Importante: com Flatpickr + altInput, o usuário pode digitar no formato BR (dd/mm/aaaa).
+        // Esta função lê o valor VISÍVEL (altInput) e converte para ISO antes de enviar para a API.
+        function obterDatasDosFiltros() {
+            const lerDataISO = (inputId) => {
+                const input = document.getElementById(inputId);
+                if (!input) return '';
+
+                const fp = input._flatpickr;
+                const valorISO = (input.value || '').trim();
+                const valorBR = fp && fp.altInput ? (fp.altInput.value || '').trim() : '';
+
+                // Se o usuário digitou/está vendo dd/mm/aaaa, converter e sincronizar no Flatpickr
+                if (valorBR && valorBR.includes('/')) {
+                    const partes = valorBR.split('/');
+                    if (partes.length === 3) {
+                        const dia = String(partes[0] || '').padStart(2, '0');
+                        const mes = String(partes[1] || '').padStart(2, '0');
+                        const ano = String(partes[2] || '');
+                        const iso = `${ano}-${mes}-${dia}`;
+                        // Atualizar o Flatpickr/input real para garantir que a API receba o valor certo
+                        if (fp) fp.setDate(valorBR, false, 'd/m/Y');
+                        return iso;
+                    }
+                }
+
+                // Se já está em ISO, usar
+                return valorISO;
+            };
+
+            const dataInicio = lerDataISO('mesInicio');
+            const dataFim = lerDataISO('mesFim');
+
+            if (!dataInicio || !dataFim) {
+                // Não cair para padrão silenciosamente (isso causa "data errada" na API)
+                throw new Error('Datas não preenchidas.');
+            }
+
+            // Sanidade básica
+            const regexISO = /^\d{4}-\d{2}-\d{2}$/;
+            if (!regexISO.test(dataInicio) || !regexISO.test(dataFim)) {
+                throw new Error('Formato de data inválido. Use dd/mm/aaaa no campo ou selecione no calendário.');
+            }
+
+            return { dataInicio, dataFim };
+        }
+
+        // Funções para controlar o overlay de carregamento
+        function mostrarLoadingOverlay(texto = 'Carregando dados da API...', subtexto = 'Aguarde enquanto buscamos as informações') {
+            const overlay = document.getElementById('loadingOverlay');
+            const loadingText = document.getElementById('loadingText');
+            const loadingSubtext = document.getElementById('loadingSubtext');
+            
+            if (loadingText) loadingText.textContent = texto;
+            if (loadingSubtext) loadingSubtext.textContent = subtexto;
+            if (overlay) overlay.classList.add('show');
+        }
+
+        function esconderLoadingOverlay() {
+            const overlay = document.getElementById('loadingOverlay');
+            if (overlay) overlay.classList.remove('show');
+        }
+
+        // Função auxiliar para recarregar dados da API usando as datas dos filtros
+        async function recarregarDadosAPI() {
+            try {
+                const { dataInicio, dataFim } = obterDatasDosFiltros();
+                const urlAPI = `https://n8n.grupobgr.com.br/webhook/a7b244fa-acc4-46ce-90b8-fe5ac882d0e9?data_inicio=${dataInicio}&data_fim=${dataFim}`;
+                
+                // Mostrar overlay de carregamento
+                mostrarLoadingOverlay('Carregando dados da API...', 'Buscando informações atualizadas');
+                // Carregando dados da API...
+                
+                const response = await fetch(urlAPI);
+                if (response.ok) {
+                    const dadosAPI = await response.json();
+                    
+                    // A API retorna um array com dois objetos:
+                    // dadosAPI[0] contém { consolidado: [...] }
+                    // dadosAPI[1] contém { analitico: [...] }
+                    if (Array.isArray(dadosAPI) && dadosAPI.length >= 1) {
+                        // Processar dados consolidados (posição 0)
+                        if (dadosAPI[0] && dadosAPI[0].consolidado) {
+                            processarDadosAPI(dadosAPI[0]);
+                        }
+                        
+                        // Processar dados analíticos (clientes) - posição 1
+                        if (dadosAPI.length >= 2 && dadosAPI[1] && dadosAPI[1].analitico) {
+                            processarClientesAPI(dadosAPI[1]);
+                            if (clientesData.length > 0) {
+                                // ${clientesData.length} clientes carregados da API
+                            }
+                        }
+                        
+                        // Salvar as datas usadas
+                        ultimasDatasAPI = { dataInicio, dataFim };
+                        
+                        // Esconder overlay de carregamento
+                        esconderLoadingOverlay();
+                        
+                        return true; // Sucesso
+                    } else {
+                        throw new Error('Formato de resposta da API inválido');
+                    }
+                } else {
+                    throw new Error(`Erro HTTP: ${response.status}`);
+                }
+            } catch (error) {
+                console.error('Erro ao recarregar da API:', error);
+                esconderLoadingOverlay();
+                // Evitar "cair" em datas padrão silenciosamente
+                if (error && error.message) {
+                    alert(error.message);
+                } else {
+                    alert('Erro ao carregar dados da API. Verifique as datas e tente novamente.');
+                }
+                return false; // Falha
+            }
+        }
+
+        // Carregamento inicial: não faz requisição automaticamente.
+        // A requisição deve ocorrer apenas ao clicar em "Aplicar Filtros".
+        function inicializarDashboardSemDados() {
+            dadosOriginais = [];
+            dadosFiltrados = [];
+            try {
+                inicializarFiltros();
+            } catch (e) {
+                // Sem dados ainda, filtros podem depender de dadosOriginais. Ignorar.
+            }
+            atualizarDashboard();
+        }
+
+        function inicializarFiltros() {
+            const responsaveis = [...new Set(dadosOriginais.map(d => d.RESPONSAVEL))].sort();
+            const equipesFiltroContainer = document.getElementById('equipesFiltroContainer');
+            const semEquipesMsg = document.getElementById('semEquipesMsg');
+            const equipesCheckboxes = document.getElementById('equipesFiltroCheckboxes');
+            
+            // Verificar se há equipes configuradas
+            const equipesExistentes = Object.keys(equipes).filter(eq => equipes[eq].length > 0);
+            
+            if (equipesExistentes.length === 0) {
+                // Sem equipes configuradas - mostrar mensagem
+                equipesFiltroContainer.style.display = 'none';
+                semEquipesMsg.style.display = 'block';
+            } else {
+                // Há equipes configuradas - mostrar filtro por equipes
+                equipesFiltroContainer.style.display = 'block';
+                semEquipesMsg.style.display = 'none';
+                equipesCheckboxes.innerHTML = '';
+                
+                equipesExistentes.sort().forEach(nomeEquipe => {
+                    const checkboxItem = document.createElement('div');
+                    checkboxItem.className = 'checkbox-item';
+                    
+                    const checkbox = document.createElement('input');
+                    checkbox.type = 'checkbox';
+                    checkbox.id = `filtro_eq_${nomeEquipe}`;
+                    checkbox.value = nomeEquipe;
+                    // Preservar seleção do filtro (se houver); caso contrário, marcar todas
+                    checkbox.checked = Array.isArray(equipesSelecionadasFiltro)
+                        ? equipesSelecionadasFiltro.includes(nomeEquipe)
+                        : true;
+                    // Não chamar API automaticamente ao marcar/desmarcar.
+                    // A consulta deve ocorrer apenas ao clicar em "Aplicar Filtros".
+                    checkbox.addEventListener('change', atualizarContadorEquipesSelecionadas);
+                    
+                    const membrosCount = equipes[nomeEquipe].length;
+                    const label = document.createElement('label');
+                    label.htmlFor = `filtro_eq_${nomeEquipe}`;
+                    label.innerHTML = `<strong>${nomeEquipe}</strong> <span style="color: var(--text-light); font-size: 0.85rem;">(${membrosCount} membro${membrosCount !== 1 ? 's' : ''})</span>`;
+                    
+                    checkboxItem.appendChild(checkbox);
+                    checkboxItem.appendChild(label);
+                    equipesCheckboxes.appendChild(checkboxItem);
+                });
+                
+                // Atualizar contador
+                const contador = document.getElementById('contadorEquipes');
+                if (contador) {
+                    contador.textContent = `${equipesExistentes.length} equipe${equipesExistentes.length !== 1 ? 's' : ''} disponível${equipesExistentes.length !== 1 ? 'eis' : ''}`;
+                }
+            }
+            
+            const meses = [...new Set(dadosOriginais.map(d => d.MES))].sort();
+            // Converter YYYY-MM para YYYY-MM-DD (primeiro dia do mês)
+            if (meses[0]) {
+                document.getElementById('mesInicio').value = meses[0] + '-01';
+            }
+            if (meses[meses.length - 1]) {
+                const ultimoMes = meses[meses.length - 1];
+                // Pegar o último dia do mês
+                const [ano, mes] = ultimoMes.split('-');
+                const ultimoDia = new Date(parseInt(ano), parseInt(mes), 0).getDate();
+                document.getElementById('mesFim').value = ultimoMes + '-' + String(ultimoDia).padStart(2, '0');
+            }
+        }
+
+        function atualizarContadorEquipesSelecionadas() {
+            const equipesExistentes = Object.keys(equipes).filter(eq => equipes[eq].length > 0);
+            const equipesCheckboxes = document.querySelectorAll('#equipesFiltroCheckboxes input[type="checkbox"]');
+            const equipesSelecionadas = Array.from(equipesCheckboxes).filter(cb => cb.checked).map(cb => cb.value);
+            const contador = document.getElementById('contadorEquipes');
+            // Persistir seleção (null = todas)
+            if (equipesExistentes.length > 0 && equipesSelecionadas.length === equipesExistentes.length) {
+                equipesSelecionadasFiltro = null;
+            } else {
+                equipesSelecionadasFiltro = equipesSelecionadas;
+            }
+            if (contador) {
+                if (equipesExistentes.length === 0) {
+                    contador.textContent = 'Nenhuma equipe configurada';
+                } else {
+                    contador.textContent = `${equipesSelecionadas.length} de ${equipesExistentes.length} selecionada${equipesSelecionadas.length !== 1 ? 's' : ''}`;
+                }
+            }
+        }
+
+        function selecionarTodasEquipesFiltro() {
+            const equipesCheckboxes = document.querySelectorAll('#equipesFiltroCheckboxes input[type="checkbox"]');
+            equipesCheckboxes.forEach(cb => cb.checked = true);
+            equipesSelecionadasFiltro = null;
+            atualizarContadorEquipesSelecionadas();
+        }
+
+        function sincronizarFiltroComEquipesExibidas(equipesExibidasSet) {
+            const equipesCheckboxes = document.querySelectorAll('#equipesFiltroCheckboxes input[type="checkbox"]');
+            if (!equipesCheckboxes || equipesCheckboxes.length === 0) return;
+
+            const exibidas = new Set(Array.from(equipesExibidasSet || []).filter(Boolean));
+            // Se não houver equipes exibidas, não mexer (evita desmarcar tudo em caso de vazio)
+            if (exibidas.size === 0) return;
+
+            equipesCheckboxes.forEach(cb => {
+                cb.checked = exibidas.has(cb.value);
+            });
+
+            equipesSelecionadasFiltro = Array.from(exibidas);
+            atualizarContadorEquipesSelecionadas();
+        }
+
+        async function aplicarFiltros() {
+            // Obter referências aos elementos do botão
+            const btnAplicarFiltros = document.getElementById('btnAplicarFiltros');
+            const iconAplicarFiltros = document.getElementById('iconAplicarFiltros');
+            const textAplicarFiltros = document.getElementById('textAplicarFiltros');
+            
+            // Mostrar indicador de carregamento
+            btnAplicarFiltros.disabled = true;
+            btnAplicarFiltros.classList.add('loading');
+            iconAplicarFiltros.className = 'fas fa-spinner fa-spin';
+            textAplicarFiltros.textContent = 'Aplicando...';
+            
+            try {
+                // Verificar se há equipes configuradas
+                const equipesExistentes = Object.keys(equipes).filter(eq => equipes[eq].length > 0);
+                let responsaveisSelecionados = [];
+                
+                if (equipesExistentes.length === 0) {
+                    // Sem equipes - mostrar todos os responsáveis
+                    responsaveisSelecionados = [...new Set(dadosOriginais.map(d => d.RESPONSAVEL))];
+                } else {
+                    // Filtrar por equipes selecionadas
+                    const equipesCheckboxes = document.querySelectorAll('#equipesFiltroCheckboxes input[type="checkbox"]');
+                    const equipesSelecionadas = Array.from(equipesCheckboxes)
+                        .filter(cb => cb.checked)
+                        .map(cb => cb.value);
+                    
+                    // Validar se pelo menos uma equipe está selecionada
+                    if (equipesSelecionadas.length === 0) {
+                        // Se nenhuma equipe selecionada, mostrar todos os responsáveis
+                        responsaveisSelecionados = [...new Set(dadosOriginais.map(d => d.RESPONSAVEL))];
+                        equipesSelecionadasFiltro = null;
+                    } else {
+                        equipesSelecionadasFiltro = equipesSelecionadas;
+                        // Coletar todos os responsáveis das equipes selecionadas
+                        equipesSelecionadas.forEach(nomeEquipe => {
+                            if (equipes[nomeEquipe] && equipes[nomeEquipe].length > 0) {
+                                responsaveisSelecionados = responsaveisSelecionados.concat(equipes[nomeEquipe]);
+                            }
+                        });
+                        
+                        // Remover duplicatas (caso algum responsável esteja em múltiplas equipes - não deveria acontecer, mas por segurança)
+                        responsaveisSelecionados = [...new Set(responsaveisSelecionados)];
+                        
+                        // Atualizar contador visual
+                        const contador = document.getElementById('contadorEquipes');
+                        if (contador) {
+                            const totalEquipes = equipesExistentes.length;
+                            contador.textContent = `${equipesSelecionadas.length} de ${totalEquipes} equipe${totalEquipes !== 1 ? 's' : ''} selecionada${equipesSelecionadas.length !== 1 ? 's' : ''}`;
+                        }
+                    }
+                }
+                
+                // Obter datas dos filtros usando a mesma função que recarregarDadosAPI usa
+                const { dataInicio, dataFim } = obterDatasDosFiltros();
+                
+                console.log('🔄 Aplicar Filtros - Sempre recarregando da API...', { dataInicio, dataFim });
+                
+                // SEMPRE recarregar da API quando aplicar filtros (sem validação de datas)
+                try {
+                    mostrarLoadingOverlay('Aplicando filtros...', 'Buscando dados atualizados da API');
+                    
+                    const sucesso = await recarregarDadosAPI();
+                    if (!sucesso) {
+                        // Se falhou ao recarregar, ainda aplicar filtros nos dados existentes
+                        console.warn('❌ Não foi possível recarregar da API, aplicando filtros nos dados existentes');
+                        esconderLoadingOverlay();
+                    } else {
+                        console.log('✅ Dados recarregados da API com sucesso');
+                        // Atualizar ultimasDatasAPI após recarregar
+                        ultimasDatasAPI = { dataInicio, dataFim };
+                    }
+                } catch (error) {
+                    console.error('❌ Erro ao recarregar da API:', error);
+                    esconderLoadingOverlay();
+                    alert('Erro ao carregar dados da API. Verifique sua conexão e tente novamente.');
+                    // Continuar aplicando filtros nos dados existentes mesmo se a API falhar
+                }
+                
+                // Converter datas para formato YYYY-MM para comparação (usar as datas já obtidas)
+                const mesInicio = dataInicio ? dataInicio.substring(0, 7) : null;
+                const mesFim = dataFim ? dataFim.substring(0, 7) : null;
+                
+                console.log('Aplicando filtros:', { 
+                    responsaveisSelecionados: responsaveisSelecionados.length, 
+                    mesInicio, 
+                    mesFim,
+                    totalDadosOriginais: dadosOriginais.length 
+                });
+                
+                dadosFiltrados = dadosOriginais.filter(d => {
+                    const respOk = responsaveisSelecionados.includes(d.RESPONSAVEL);
+                    const mesOk = (!mesInicio || d.MES >= mesInicio) && (!mesFim || d.MES <= mesFim);
+                    return respOk && mesOk;
+                });
+                
+                console.log('Dados filtrados:', dadosFiltrados.length);
+                
+                atualizarDashboard();
+
+                // Após filtrar e atualizar os gráficos, deixar marcadas apenas as equipes que estão sendo exibidas
+                if (Object.keys(equipes).length > 0) {
+                    const equipesExibidas = new Set();
+                    dadosFiltrados.forEach(d => {
+                        const eq = obterEquipeDoResponsavel(d.RESPONSAVEL);
+                        if (eq) equipesExibidas.add(eq);
+                    });
+                    sincronizarFiltroComEquipesExibidas(equipesExibidas);
+                }
+            } finally {
+                // Esconder overlay de carregamento (caso ainda esteja visível)
+                esconderLoadingOverlay();
+                
+                // Restaurar estado do botão
+                btnAplicarFiltros.disabled = false;
+                btnAplicarFiltros.classList.remove('loading');
+                iconAplicarFiltros.className = 'fas fa-sync-alt';
+                textAplicarFiltros.textContent = 'Aplicar Filtros';
+            }
+        }
+
+        function limparFiltros() {
+            // Marcar todas as equipes (se houver equipes configuradas)
+            const equipesCheckboxes = document.querySelectorAll('#equipesFiltroCheckboxes input[type="checkbox"]');
+            equipesCheckboxes.forEach(cb => cb.checked = true);
+            
+            // Limpar filtros de data
+            const meses = [...new Set(dadosOriginais.map(d => d.MES))].sort();
+            if (meses[0]) {
+                document.getElementById('mesInicio').value = meses[0] + '-01';
+            }
+            if (meses[meses.length - 1]) {
+                const ultimoMes = meses[meses.length - 1];
+                const [ano, mes] = ultimoMes.split('-');
+                const ultimoDia = new Date(parseInt(ano), parseInt(mes), 0).getDate();
+                document.getElementById('mesFim').value = ultimoMes + '-' + String(ultimoDia).padStart(2, '0');
+            }
+            
+            // Apenas atualizar o contador/estado visual; não consultar API automaticamente.
+            atualizarContadorEquipesSelecionadas();
+        }
+
+        // Função auxiliar para obter a equipe de um responsável
+        function obterEquipeDoResponsavel(responsavel) {
+            for (const [nomeEquipe, membros] of Object.entries(equipes)) {
+                if (membros.includes(responsavel)) {
+                    return nomeEquipe;
+                }
+            }
+            return null; // Sem equipe
+        }
+
+        // Função auxiliar para agrupar dados por equipe
+        function agruparDadosPorEquipe(dados) {
+            if (Object.keys(equipes).length === 0) {
+                // Se não há equipes configuradas, retornar dados agrupados por responsável
+                const agrupado = {};
+                dados.forEach(d => {
+                    const chave = d.RESPONSAVEL;
+                    if (!agrupado[chave]) {
+                        agrupado[chave] = {
+                            NOME: chave,
+                            ABERTOS: 0,
+                            FECHADOS: 0,
+                            REGISTRO_DI: 0,
+                            ACUMULADO_ABERTOS: 0,
+                            ACUMULADO_FECHADOS: 0,
+                            ACUMULADO_REGISTRO_DI: 0,
+                            SALDO_ACUMULADO: 0,
+                            SALDO_EM_ABERTO: 0,
+                            MES: '',
+                            MEMBROS: [chave]
+                        };
+                    }
+                    agrupado[chave].ABERTOS += d.ABERTOS;
+                    agrupado[chave].FECHADOS += d.FECHADOS;
+                    agrupado[chave].REGISTRO_DI += (d.REGISTRO_DI || 0);
+                    
+                    if (d.MES > agrupado[chave].MES) {
+                        agrupado[chave].ACUMULADO_ABERTOS = d.ACUMULADO_ABERTOS || 0;
+                        agrupado[chave].ACUMULADO_FECHADOS = d.ACUMULADO_FECHADOS || 0;
+                        agrupado[chave].ACUMULADO_REGISTRO_DI = d.ACUMULADO_REGISTRO_DI || 0;
+                        agrupado[chave].SALDO_ACUMULADO = d.SALDO_ACUMULADO || 0;
+                        agrupado[chave].SALDO_EM_ABERTO = d.SALDO_EM_ABERTO || 0;
+                        agrupado[chave].MES = d.MES;
+                    }
+                });
+                return Object.values(agrupado);
+            }
+
+            // Agrupar por equipe
+            const agrupadoPorEquipe = {};
+            
+            dados.forEach(d => {
+                const equipe = obterEquipeDoResponsavel(d.RESPONSAVEL);
+                const chaveEquipe = equipe || 'Sem Equipe';
+                
+                if (!agrupadoPorEquipe[chaveEquipe]) {
+                    agrupadoPorEquipe[chaveEquipe] = {
+                        NOME: chaveEquipe,
+                        ABERTOS: 0,
+                        FECHADOS: 0,
+                        REGISTRO_DI: 0,
+                        ACUMULADO_ABERTOS: 0,
+                        ACUMULADO_FECHADOS: 0,
+                        ACUMULADO_REGISTRO_DI: 0,
+                        SALDO_ACUMULADO: 0,
+                        SALDO_EM_ABERTO: 0,
+                        MES: '',
+                        MEMBROS: new Set()
+                    };
+                }
+                
+                agrupadoPorEquipe[chaveEquipe].ABERTOS += d.ABERTOS;
+                agrupadoPorEquipe[chaveEquipe].FECHADOS += d.FECHADOS;
+                agrupadoPorEquipe[chaveEquipe].REGISTRO_DI += (d.REGISTRO_DI || 0);
+                agrupadoPorEquipe[chaveEquipe].MEMBROS.add(d.RESPONSAVEL);
+                
+                // Para valores acumulados, precisamos calcular corretamente por equipe
+                // Pegar o maior mês e somar os saldos acumulados dos membros da equipe
+                if (d.MES > agrupadoPorEquipe[chaveEquipe].MES) {
+                    agrupadoPorEquipe[chaveEquipe].MES = d.MES;
+                }
+            });
+            
+            // Calcular saldos acumulados por equipe (soma dos últimos saldos de cada membro)
+            const ultimosValoresPorEquipe = {};
+            dados.forEach(d => {
+                const equipe = obterEquipeDoResponsavel(d.RESPONSAVEL);
+                const chaveEquipe = equipe || 'Sem Equipe';
+                
+                if (!ultimosValoresPorEquipe[chaveEquipe]) {
+                    ultimosValoresPorEquipe[chaveEquipe] = {};
+                }
+                
+                const chaveResp = d.RESPONSAVEL;
+                if (!ultimosValoresPorEquipe[chaveEquipe][chaveResp] || 
+                    d.MES > ultimosValoresPorEquipe[chaveEquipe][chaveResp].MES) {
+                    ultimosValoresPorEquipe[chaveEquipe][chaveResp] = {
+                        ACUMULADO_ABERTOS: d.ACUMULADO_ABERTOS || 0,
+                        ACUMULADO_FECHADOS: d.ACUMULADO_FECHADOS || 0,
+                        ACUMULADO_REGISTRO_DI: d.ACUMULADO_REGISTRO_DI || 0,
+                        SALDO_ACUMULADO: d.SALDO_ACUMULADO || 0,
+                        SALDO_EM_ABERTO: d.SALDO_EM_ABERTO || 0,
+                        MES: d.MES
+                    };
+                }
+            });
+            
+            // Somar os valores acumulados
+            Object.keys(agrupadoPorEquipe).forEach(chaveEquipe => {
+                const valores = ultimosValoresPorEquipe[chaveEquipe] || {};
+                agrupadoPorEquipe[chaveEquipe].ACUMULADO_ABERTOS = Object.values(valores)
+                    .reduce((sum, v) => sum + v.ACUMULADO_ABERTOS, 0);
+                agrupadoPorEquipe[chaveEquipe].ACUMULADO_FECHADOS = Object.values(valores)
+                    .reduce((sum, v) => sum + v.ACUMULADO_FECHADOS, 0);
+                agrupadoPorEquipe[chaveEquipe].ACUMULADO_REGISTRO_DI = Object.values(valores)
+                    .reduce((sum, v) => sum + v.ACUMULADO_REGISTRO_DI, 0);
+                agrupadoPorEquipe[chaveEquipe].SALDO_ACUMULADO = Object.values(valores)
+                    .reduce((sum, v) => sum + v.SALDO_ACUMULADO, 0);
+                agrupadoPorEquipe[chaveEquipe].SALDO_EM_ABERTO = Object.values(valores)
+                    .reduce((sum, v) => sum + (v.SALDO_EM_ABERTO || 0), 0);
+                agrupadoPorEquipe[chaveEquipe].MEMBROS = Array.from(agrupadoPorEquipe[chaveEquipe].MEMBROS);
+            });
+            
+            return Object.values(agrupadoPorEquipe);
+        }
+
+        function atualizarMetricas() {
+            const dadosAgrupados = agruparDadosPorEquipe(dadosFiltrados);
+            
+            const totalFechados = dadosAgrupados.reduce((sum, d) => sum + d.FECHADOS, 0);
+            const totalAbertos = dadosAgrupados.reduce((sum, d) => sum + d.ABERTOS, 0);
+            const saldoAtual = dadosAgrupados.reduce((sum, d) => sum + (d.SALDO_EM_ABERTO || d.SALDO_ACUMULADO || 0), 0);
+            const totalDI = dadosAgrupados.reduce((sum, d) => sum + d.REGISTRO_DI, 0);
+            
+            document.getElementById('totalFechados').textContent = totalFechados.toLocaleString('pt-BR');
+            document.getElementById('totalAbertos').textContent = totalAbertos.toLocaleString('pt-BR');
+            document.getElementById('saldoAtual').textContent = saldoAtual.toLocaleString('pt-BR');
+            document.getElementById('totalDI').textContent = totalDI.toLocaleString('pt-BR');
+        }
+
+        function atualizarChartPizza() {
+            // Agrupar dados por equipe
+            const dadosAgrupados = agruparDadosPorEquipe(dadosFiltrados);
+            
+            const equipesOrdenadas = dadosAgrupados.sort((a, b) => 
+                (b.SALDO_EM_ABERTO || b.SALDO_ACUMULADO || 0) - (a.SALDO_EM_ABERTO || a.SALDO_ACUMULADO || 0)
+            );
+            const labels = equipesOrdenadas.map(e => e.NOME);
+            const valores = equipesOrdenadas.map(e => e.SALDO_EM_ABERTO || e.SALDO_ACUMULADO || 0);
+            
+            // Gerar cores dinamicamente
+            const cores = valores.map((v, i) => {
+                const coresBase = [
+                    'rgba(87, 118, 42, 0.8)', 'rgba(107, 143, 58, 0.8)', 'rgba(59, 130, 246, 0.8)',
+                    'rgba(16, 185, 129, 0.8)', 'rgba(245, 158, 11, 0.8)', 'rgba(239, 68, 68, 0.8)',
+                    'rgba(236, 72, 153, 0.8)', 'rgba(14, 165, 233, 0.8)', 'rgba(34, 197, 94, 0.8)'
+                ];
+                return coresBase[i % coresBase.length];
+            });
+            
+            const ctx = document.getElementById('chartPizza').getContext('2d');
+            
+            if (charts.pizza) charts.pizza.destroy();
+            
+            charts.pizza = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Processos em Andamento',
+                        data: valores,
+                        backgroundColor: cores,
+                        borderColor: cores.map(c => c.replace('0.8', '1')),
+                        borderWidth: 2,
+                        borderRadius: 8
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return 'Processos em Andamento: ' + context.parsed.x.toLocaleString('pt-BR');
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: { 
+                            beginAtZero: true,
+                            grid: { color: 'rgba(0,0,0,0.05)' },
+                            ticks: {
+                                callback: function(value) {
+                                    return value.toLocaleString('pt-BR');
+                                }
+                            }
+                        },
+                        y: { 
+                            grid: { display: false }
+                        }
+                    },
+                    onClick: (event, elements) => {
+                        if (elements.length > 0) {
+                            const index = elements[0].index;
+                            const equipe = equipesOrdenadas[index];
+                            // Garantir que MEMBROS seja um array
+                            const membros = Array.isArray(equipe.MEMBROS) 
+                                ? equipe.MEMBROS 
+                                : (equipe.MEMBROS instanceof Set ? Array.from(equipe.MEMBROS) : []);
+                            abrirModalClientes(equipe.NOME, membros);
+                        }
+                    },
+                    onHover: (event, elements) => {
+                        event.native.target.style.cursor = elements.length > 0 ? 'pointer' : 'default';
+                    }
+                }
+            });
+        }
+
+        function atualizarChartEvolucao() {
+            const fechamentosMensais = {};
+            const abertosMensais = {};
+            const registroDIMensais = {};
+            const saldoMensais = {};
+            
+            // Agrupar dados por mês e por equipe
+            const dadosPorMes = {};
+            
+            dadosFiltrados.forEach(d => {
+                if (!dadosPorMes[d.MES]) {
+                    dadosPorMes[d.MES] = [];
+                }
+                dadosPorMes[d.MES].push(d);
+            });
+            
+            // Para cada mês, agrupar por equipe
+            Object.keys(dadosPorMes).forEach(mes => {
+                const dadosAgrupados = agruparDadosPorEquipe(dadosPorMes[mes]);
+                
+                fechamentosMensais[mes] = dadosAgrupados.reduce((sum, e) => sum + e.FECHADOS, 0);
+                abertosMensais[mes] = dadosAgrupados.reduce((sum, e) => sum + e.ABERTOS, 0);
+                registroDIMensais[mes] = dadosAgrupados.reduce((sum, e) => sum + e.REGISTRO_DI, 0);
+                saldoMensais[mes] = dadosAgrupados.reduce((sum, e) => sum + (e.SALDO_EM_ABERTO || e.SALDO_ACUMULADO || 0), 0);
+            });
+            
+            const meses = Object.keys(fechamentosMensais).sort();
+            const fechados = meses.map(m => fechamentosMensais[m]);
+            const abertos = meses.map(m => abertosMensais[m]);
+            const registroDI = meses.map(m => registroDIMensais[m]);
+            const saldo = meses.map(m => saldoMensais[m] || 0);
+            
+            const ctx = document.getElementById('chartEvolucao').getContext('2d');
+            
+            if (charts.evolucao) charts.evolucao.destroy();
+            
+            charts.evolucao = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: meses,
+                    datasets: [
+                        {
+                            label: 'Fechados',
+                            data: fechados,
+                            borderColor: 'rgba(16, 185, 129, 1)',
+                            backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                            borderWidth: 3,
+                            fill: false,
+                            tension: 0.4
+                        },
+                        {
+                            label: 'Abertos',
+                            data: abertos,
+                            borderColor: 'rgba(59, 130, 246, 1)',
+                            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                            borderWidth: 3,
+                            fill: false,
+                            tension: 0.4
+                        },
+                        {
+                            label: 'Registro D.I.',
+                            data: registroDI,
+                            borderColor: 'rgba(245, 158, 11, 1)',
+                            backgroundColor: 'rgba(245, 158, 11, 0.1)',
+                            borderWidth: 3,
+                            fill: false,
+                            tension: 0.4,
+                            borderDash: [5, 5]
+                        },
+                        {
+                            label: 'Processos em Andamento',
+                            data: saldo,
+                            borderColor: 'rgba(107, 143, 58, 1)',
+                            backgroundColor: 'rgba(107, 143, 58, 0.1)',
+                            borderWidth: 3,
+                            fill: false,
+                            tension: 0.4,
+                            borderDash: [10, 5]
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'top' }
+                    },
+                    scales: {
+                        y: { 
+                            beginAtZero: false, 
+                            grid: { color: 'rgba(0,0,0,0.05)' } 
+                        },
+                        x: { grid: { display: false } }
+                    }
+                }
+            });
+        }
+
+        // Inicializar checkboxes de equipes para o gráfico de evolução
+        function inicializarEquipesEvolucao() {
+            const dadosAgrupados = agruparDadosPorEquipe(dadosFiltrados);
+            const todasEquipes = dadosAgrupados.map(e => e.NOME).sort();
+            
+            // Se nenhuma equipe está selecionada, selecionar todas
+            if (equipesSelecionadasEvolucao.length === 0) {
+                equipesSelecionadasEvolucao = [...todasEquipes];
+            }
+            
+            const container = document.getElementById('equipesEvolucaoContainer');
+            if (!container) return;
+            
+            let html = '';
+            
+            todasEquipes.forEach(equipeNome => {
+                const isSelected = equipesSelecionadasEvolucao.includes(equipeNome);
+                const idEquipe = equipeNome.replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_]/g, '');
+                html += `
+                    <label style="display: flex; align-items: center; gap: 8px; padding: 8px 12px; cursor: pointer; border-radius: 8px; border: 2px solid ${isSelected ? 'var(--primary)' : 'var(--border)'}; background: ${isSelected ? 'rgba(87, 118, 42, 0.1)' : 'white'}; transition: all 0.3s; font-size: 0.9rem;" 
+                           onmouseover="this.style.borderColor='var(--primary)'" 
+                           onmouseout="this.style.borderColor='${isSelected ? 'var(--primary)' : 'var(--border)'}'">
+                        <input type="checkbox" id="eqEvol_${idEquipe}" 
+                               ${isSelected ? 'checked' : ''} 
+                               onchange="toggleEquipeEvolucao('${equipeNome.replace(/'/g, "\\'")}')" 
+                               style="width: 18px; height: 18px; cursor: pointer; accent-color: var(--primary);">
+                        <span>${equipeNome}</span>
+                    </label>
+                `;
+            });
+            
+            container.innerHTML = html || '<p style="text-align: center; color: var(--text-light); padding: 10px; width: 100%;">Nenhuma equipe disponível.</p>';
+        }
+
+        // Toggle seleção de equipe no gráfico de evolução
+        function toggleEquipeEvolucao(equipeNome) {
+            const index = equipesSelecionadasEvolucao.indexOf(equipeNome);
+            if (index >= 0) {
+                equipesSelecionadasEvolucao.splice(index, 1);
+            } else {
+                equipesSelecionadasEvolucao.push(equipeNome);
+            }
+            
+            // Validar se pelo menos uma equipe está selecionada
+            if (equipesSelecionadasEvolucao.length === 0) {
+                alert('Selecione pelo menos uma equipe para exibir no gráfico.');
+                equipesSelecionadasEvolucao.push(equipeNome);
+            }
+            
+            // Atualizar visual dos checkboxes
+            inicializarEquipesEvolucao();
+            atualizarChartEvolucaoPorEquipe();
+        }
+
+        // Selecionar todas as equipes
+        function selecionarTodasEquipesEvolucao() {
+            const dadosAgrupados = agruparDadosPorEquipe(dadosFiltrados);
+            equipesSelecionadasEvolucao = dadosAgrupados.map(e => e.NOME).sort();
+            inicializarEquipesEvolucao();
+            atualizarChartEvolucaoPorEquipe();
+        }
+
+        function atualizarChartEvolucaoPorEquipe() {
+            // Obter todas as equipes/operacionais disponíveis
+            const dadosAgrupados = agruparDadosPorEquipe(dadosFiltrados);
+            const todasEquipes = dadosAgrupados.map(e => e.NOME).sort();
+            
+            // Usar equipes selecionadas ou todas se nenhuma estiver selecionada
+            const equipes = equipesSelecionadasEvolucao.length > 0 
+                ? equipesSelecionadasEvolucao.filter(eq => todasEquipes.includes(eq))
+                : todasEquipes;
+            
+            // Se não há equipes selecionadas, não fazer nada
+            if (equipes.length === 0) {
+                const ctx = document.getElementById('chartEvolucaoPorEquipe').getContext('2d');
+                if (charts.evolucaoPorEquipe) charts.evolucaoPorEquipe.destroy();
+                charts.evolucaoPorEquipe = new Chart(ctx, {
+                    type: 'bar',
+                    data: { labels: [], datasets: [] },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { position: 'top' }
+                        }
+                    }
+                });
+                return;
+            }
+            
+            // Agrupar dados por mês e por equipe
+            const dadosPorMes = {};
+            dadosFiltrados.forEach(d => {
+                if (!dadosPorMes[d.MES]) {
+                    dadosPorMes[d.MES] = [];
+                }
+                dadosPorMes[d.MES].push(d);
+            });
+            
+            // Obter todos os meses ordenados
+            const meses = Object.keys(dadosPorMes).sort();
+            
+            // Preparar dados por equipe para cada métrica
+            const dadosPorEquipe = {};
+            
+            equipes.forEach(equipeNome => {
+                dadosPorEquipe[equipeNome] = {
+                    fechados: [],
+                    abertos: [],
+                    registroDI: [],
+                    saldo: []
+                };
+            });
+            
+            // Para cada mês, calcular valores por equipe
+            meses.forEach(mes => {
+                // Pegar todos os dados até este mês (inclusive) para calcular valores acumulados
+                const dadosAteMes = dadosFiltrados.filter(d => d.MES <= mes);
+                const dadosAgrupadosMes = agruparDadosPorEquipe(dadosAteMes);
+                
+                // Para valores mensais (fechados, abertos), usar apenas dados do mês atual
+                const dadosDoMes = dadosPorMes[mes];
+                const dadosAgrupadosMesAtual = agruparDadosPorEquipe(dadosDoMes);
+                
+                equipes.forEach(equipeNome => {
+                    const equipeDataMes = dadosAgrupadosMesAtual.find(e => e.NOME === equipeNome);
+                    const equipeDataAcumulado = dadosAgrupadosMes.find(e => e.NOME === equipeNome);
+                    
+                    dadosPorEquipe[equipeNome].fechados.push(equipeDataMes ? equipeDataMes.FECHADOS : 0);
+                    dadosPorEquipe[equipeNome].abertos.push(equipeDataMes ? equipeDataMes.ABERTOS : 0);
+                    
+                    // Para D.I. e saldo, usar o acumulado até este mês
+                    if (equipeDataAcumulado) {
+                        // D.I. acumulado
+                        dadosPorEquipe[equipeNome].registroDI.push(equipeDataAcumulado.ACUMULADO_REGISTRO_DI || equipeDataAcumulado.REGISTRO_DI || 0);
+                        // Saldo em aberto (processos em andamento)
+                        dadosPorEquipe[equipeNome].saldo.push(equipeDataAcumulado.SALDO_EM_ABERTO || equipeDataAcumulado.SALDO_ACUMULADO || 0);
+                    } else {
+                        // Se não há dados até este mês, usar o último valor conhecido ou 0
+                        const ultimoDI = dadosPorEquipe[equipeNome].registroDI.length > 0 
+                            ? dadosPorEquipe[equipeNome].registroDI[dadosPorEquipe[equipeNome].registroDI.length - 1] 
+                            : 0;
+                        dadosPorEquipe[equipeNome].registroDI.push(ultimoDI);
+                        
+                        const ultimoSaldo = dadosPorEquipe[equipeNome].saldo.length > 0 
+                            ? dadosPorEquipe[equipeNome].saldo[dadosPorEquipe[equipeNome].saldo.length - 1] 
+                            : 0;
+                        dadosPorEquipe[equipeNome].saldo.push(ultimoSaldo);
+                    }
+                });
+            });
+            
+            // Preparar datasets para o gráfico de barras agrupadas
+            const datasets = [];
+            
+            // Cores para diferentes equipes
+            const coresEquipes = [
+                'rgba(87, 118, 42, 1)', 'rgba(107, 143, 58, 1)', 'rgba(14, 165, 233, 1)',
+                'rgba(34, 197, 94, 1)', 'rgba(245, 158, 11, 1)', 'rgba(239, 68, 68, 1)',
+                'rgba(107, 143, 58, 1)', 'rgba(16, 185, 129, 1)', 'rgba(251, 146, 60, 1)',
+                'rgba(168, 85, 247, 1)', 'rgba(59, 130, 246, 1)', 'rgba(20, 184, 166, 1)'
+            ];
+            
+            // Exibir apenas a métrica selecionada (Processos em Andamento ou D.I.)
+            equipes.forEach((equipeNome, indexEquipe) => {
+                const corBase = coresEquipes[indexEquipe % coresEquipes.length];
+                
+                if (tipoEvolucaoPorEquipe === 'saldo') {
+                    // Processos em Andamento
+                    datasets.push({
+                        label: `${equipeNome} - Processos em Andamento`,
+                        data: dadosPorEquipe[equipeNome].saldo,
+                        backgroundColor: corBase,
+                        borderColor: corBase,
+                        borderWidth: 1
+                    });
+                } else {
+                    // Registro D.I.
+                    datasets.push({
+                        label: `${equipeNome} - Registro D.I.`,
+                        data: dadosPorEquipe[equipeNome].registroDI,
+                        backgroundColor: corBase,
+                        borderColor: corBase,
+                        borderWidth: 1
+                    });
+                }
+            });
+            
+            const ctx = document.getElementById('chartEvolucaoPorEquipe').getContext('2d');
+            
+            if (charts.evolucaoPorEquipe) charts.evolucaoPorEquipe.destroy();
+            
+            charts.evolucaoPorEquipe = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: meses,
+                    datasets: datasets
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { 
+                            position: 'top',
+                            labels: {
+                                boxWidth: 12,
+                                padding: 8,
+                                font: {
+                                    size: 10
+                                }
+                            }
+                        },
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false
+                        }
+                    },
+                    scales: {
+                        y: { 
+                            beginAtZero: true, 
+                            grid: { color: 'rgba(0,0,0,0.05)' },
+                            stacked: false
+                        },
+                        x: { 
+                            grid: { display: false },
+                            stacked: false
+                        }
+                    },
+                    interaction: {
+                        mode: 'index',
+                        intersect: false
+                    }
+                }
+            });
+        }
+
+        function atualizarChartComparacao() {
+            // Agrupar dados por equipe
+            const dadosAgrupados = agruparDadosPorEquipe(dadosFiltrados);
+            
+            const equipesOrdenadas = dadosAgrupados.sort((a, b) => a.NOME.localeCompare(b.NOME));
+            const labels = equipesOrdenadas.map(e => e.NOME);
+            const abertos = equipesOrdenadas.map(e => e.ACUMULADO_ABERTOS);
+            const fechados = equipesOrdenadas.map(e => e.ACUMULADO_FECHADOS);
+            
+            const ctx = document.getElementById('chartComparacao').getContext('2d');
+            
+            if (charts.comparacao) charts.comparacao.destroy();
+            
+            charts.comparacao = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'Abertos',
+                            data: abertos,
+                            backgroundColor: 'rgba(59, 130, 246, 0.8)',
+                            borderColor: 'rgba(59, 130, 246, 1)',
+                            borderWidth: 2,
+                            borderRadius: 8
+                        },
+                        {
+                            label: 'Fechados',
+                            data: fechados,
+                            backgroundColor: 'rgba(16, 185, 129, 0.8)',
+                            borderColor: 'rgba(16, 185, 129, 1)',
+                            borderWidth: 2,
+                            borderRadius: 8
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,0.05)' } },
+                        x: { grid: { display: false } }
+                    }
+                }
+            });
+        }
+
+        function atualizarChartSaldo() {
+            // Agrupar dados por equipe
+            const dadosAgrupados = agruparDadosPorEquipe(dadosFiltrados);
+            
+            const equipesOrdenadas = dadosAgrupados.sort((a, b) => 
+                (b.SALDO_EM_ABERTO || b.SALDO_ACUMULADO || 0) - (a.SALDO_EM_ABERTO || a.SALDO_ACUMULADO || 0)
+            );
+            const labels = equipesOrdenadas.map(e => e.NOME);
+            const saldos = equipesOrdenadas.map(e => e.SALDO_EM_ABERTO || e.SALDO_ACUMULADO || 0);
+            
+            const cores = saldos.map(s => s >= 0 ? 'rgba(16, 185, 129, 0.8)' : 'rgba(239, 68, 68, 0.8)');
+            
+            const ctx = document.getElementById('chartSaldo').getContext('2d');
+            
+            if (charts.saldo) charts.saldo.destroy();
+            
+            charts.saldo = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Processos em Andamento',
+                        data: saldos,
+                        backgroundColor: cores,
+                        borderColor: cores.map(c => c.replace('0.8', '1')),
+                        borderWidth: 2,
+                        borderRadius: 8
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { grid: { color: 'rgba(0,0,0,0.05)' } },
+                        x: { grid: { display: false } }
+                    },
+                    onClick: (event, elements) => {
+                        if (elements.length > 0) {
+                            const index = elements[0].index;
+                            const equipe = equipesOrdenadas[index];
+                            // Garantir que MEMBROS seja um array
+                            const membros = Array.isArray(equipe.MEMBROS) 
+                                ? equipe.MEMBROS 
+                                : (equipe.MEMBROS instanceof Set ? Array.from(equipe.MEMBROS) : []);
+                            abrirModalClientes(equipe.NOME, membros);
+                        }
+                    },
+                    onHover: (event, elements) => {
+                        event.native.target.style.cursor = elements.length > 0 ? 'pointer' : 'default';
+                    }
+                }
+            });
+        }
+
+        let tipoRankingAtual = 'saldo';
+        let tipoEvolucaoPorEquipe = 'saldo'; // 'saldo' ou 'di'
+        let rankingData = []; // Armazenar dados do ranking para uso nos event listeners
+
+        function alterarRanking(tipo) {
+            tipoRankingAtual = tipo;
+            
+            // Atualizar botões
+            document.getElementById('btnRankingSaldo').classList.toggle('active', tipo === 'saldo');
+            document.getElementById('btnRankingDI').classList.toggle('active', tipo === 'di');
+            
+            // Atualizar ranking
+            atualizarRanking();
+        }
+
+        function alterarEvolucaoPorEquipe(tipo) {
+            tipoEvolucaoPorEquipe = tipo;
+            
+            // Atualizar botões
+            document.getElementById('btnEvolucaoSaldo').classList.toggle('active', tipo === 'saldo');
+            document.getElementById('btnEvolucaoDI').classList.toggle('active', tipo === 'di');
+            
+            // Atualizar gráfico
+            atualizarChartEvolucaoPorEquipe();
+        }
+
+        function atualizarRanking() {
+            // Atualizar título do ranking
+            const tituloRanking = document.getElementById('tituloRanking');
+            if (tituloRanking) {
+                if (Object.keys(equipes).length === 0) {
+                    tituloRanking.innerHTML = '<i class="fas fa-trophy"></i> Ranking de Responsáveis';
+                } else {
+                    tituloRanking.innerHTML = '<i class="fas fa-trophy"></i> Ranking de Equipes';
+                }
+            }
+            
+            // Agrupar dados por equipe
+            const dadosAgrupados = agruparDadosPorEquipe(dadosFiltrados);
+            
+            // Criar ranking ordenado por processos em andamento ou D.I.
+            // Mostrar TODAS as equipes cadastradas
+            rankingData = dadosAgrupados
+                .map(equipe => ({
+                    nome: equipe.NOME,
+                    saldo: equipe.SALDO_EM_ABERTO || equipe.SALDO_ACUMULADO || 0,
+                    di: equipe.REGISTRO_DI || 0,
+                    membros: equipe.MEMBROS || []
+                }))
+                .sort((a, b) => {
+                    if (tipoRankingAtual === 'di') {
+                        return b.di - a.di;
+                    } else {
+                        return b.saldo - a.saldo;
+                    }
+                });
+            
+            const html = rankingData.map((item, index) => {
+                const pos = index + 1;
+                const classe = pos === 1 ? 'gold' : pos === 2 ? 'silver' : pos === 3 ? 'bronze' : 'default';
+                const valorExibido = tipoRankingAtual === 'di' ? item.di : item.saldo;
+                
+                const membrosTexto = item.membros && item.membros.length > 0 
+                    ? `<div style="font-size: 0.75rem; color: var(--text-light); margin-top: 5px;">
+                        ${item.membros.length} membro${item.membros.length !== 1 ? 's' : ''}: ${item.membros.join(', ')}
+                       </div>`
+                    : '';
+                
+                return `
+                    <div class="ranking-item" onclick="abrirModalClientesPorIndex(${index})" style="cursor: pointer;">
+                        <div class="ranking-position ${classe}">${pos}</div>
+                        <div class="ranking-info">
+                            <div class="ranking-name">${item.nome}</div>
+                            <div class="ranking-stats">
+                                <span>Processos em Andamento: ${item.saldo.toLocaleString('pt-BR')}</span>
+                                <span>D.I.: ${item.di.toLocaleString('pt-BR')}</span>
+                            </div>
+                            ${membrosTexto}
+                        </div>
+                        <div class="ranking-value">${valorExibido.toLocaleString('pt-BR')}</div>
+                    </div>
+                `;
+            }).join('');
+            
+            if (rankingData.length === 0) {
+                document.getElementById('rankingContainer').innerHTML = `
+                    <div style="text-align: center; padding: 40px; color: var(--text-light);">
+                        <i class="fas fa-info-circle" style="font-size: 2rem; margin-bottom: 10px;"></i>
+                        <p>Nenhum operacional encontrado nos dados filtrados.</p>
+                    </div>
+                `;
+            } else {
+                document.getElementById('rankingContainer').innerHTML = html;
+            }
+        }
+
+        // Função auxiliar para abrir modal de clientes por índice do ranking
+        function abrirModalClientesPorIndex(index) {
+            if (rankingData && rankingData[index]) {
+                const item = rankingData[index];
+                // Garantir que membros seja um array
+                const membros = Array.isArray(item.membros) 
+                    ? item.membros 
+                    : (item.membros instanceof Set ? Array.from(item.membros) : []);
+                console.log('abrirModalClientesPorIndex:', { index, item, membros });
+                abrirModalClientes(item.nome, membros);
+            } else {
+                console.error('abrirModalClientesPorIndex: índice inválido ou rankingData não disponível', { index, rankingDataLength: rankingData?.length });
+            }
+        }
+
+        function atualizarTabela() {
+            // Agrupar dados por equipe
+            const dadosAgrupados = agruparDadosPorEquipe(dadosFiltrados);
+            
+            const linhas = dadosAgrupados
+                .sort((a, b) => (b.SALDO_EM_ABERTO || b.SALDO_ACUMULADO || 0) - (a.SALDO_EM_ABERTO || a.SALDO_ACUMULADO || 0))
+                .map((equipe, index) => {
+                    const membrosTexto = equipe.MEMBROS && equipe.MEMBROS.length > 0 
+                        ? `<br><small style="color: var(--text-light);">${equipe.MEMBROS.join(', ')}</small>`
+                        : '';
+                    const saldoEmAberto = equipe.SALDO_EM_ABERTO || equipe.SALDO_ACUMULADO || 0;
+                    
+                    return `
+                        <tr>
+                            <td>${index + 1}</td>
+                            <td><strong>${equipe.NOME}</strong>${membrosTexto}</td>
+                            <td>${equipe.ABERTOS.toLocaleString('pt-BR')}</td>
+                            <td>${equipe.FECHADOS.toLocaleString('pt-BR')}</td>
+                            <td>${saldoEmAberto.toLocaleString('pt-BR')}</td>
+                            <td>${equipe.REGISTRO_DI.toLocaleString('pt-BR')}</td>
+                        </tr>
+                    `;
+                });
+            
+            document.getElementById('tabelaBody').innerHTML = linhas.join('');
+        }
+
+        function atualizarDashboard() {
+            atualizarMetricas();
+            atualizarChartPizza();
+            atualizarChartEvolucao();
+            inicializarEquipesEvolucao();
+            atualizarChartEvolucaoPorEquipe();
+            atualizarChartComparacao();
+            atualizarChartSaldo();
+            // Garantir que o botão correto está ativo
+            document.getElementById('btnRankingSaldo').classList.toggle('active', tipoRankingAtual === 'saldo');
+            document.getElementById('btnRankingDI').classList.toggle('active', tipoRankingAtual === 'di');
+            document.getElementById('btnEvolucaoSaldo').classList.toggle('active', tipoEvolucaoPorEquipe === 'saldo');
+            document.getElementById('btnEvolucaoDI').classList.toggle('active', tipoEvolucaoPorEquipe === 'di');
+            atualizarRanking();
+            atualizarTabela();
+        }
+
+        // Função para validar data (verifica se a data existe de verdade)
+        function validarData(dia, mes, ano) {
+            // Verificar limites básicos
+            if (dia < 1 || dia > 31 || mes < 1 || mes > 12 || ano < 2020 || ano > 2099) {
+                return false;
+            }
+            
+            // Verificar dias por mês
+            const diasPorMes = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+            
+            // Verificar ano bissexto
+            const isBissexto = (ano % 4 === 0 && ano % 100 !== 0) || (ano % 400 === 0);
+            if (isBissexto) {
+                diasPorMes[1] = 29; // Fevereiro tem 29 dias em ano bissexto
+            }
+            
+            // Verificar se o dia é válido para o mês
+            if (dia > diasPorMes[mes - 1]) {
+                return false;
+            }
+            
+            // Criar objeto Date para validação final
+            const data = new Date(ano, mes - 1, dia);
+            
+            // Verificar se a data criada corresponde aos valores fornecidos
+            return data.getDate() === dia && 
+                   data.getMonth() === (mes - 1) && 
+                   data.getFullYear() === ano;
+        }
+
+        // Função para aplicar máscara de data (dd/mm/yyyy) com validação rigorosa
+        function aplicarMascaraData(input) {
+            // Remover listeners anteriores se existirem
+            const novoInput = input.cloneNode(true);
+            input.parentNode.replaceChild(novoInput, input);
+            
+            let valorAnterior = novoInput.value || '';
+            
+            novoInput.addEventListener('input', function(e) {
+                let value = e.target.value.replace(/\D/g, ''); // Remove tudo que não é dígito
+                
+                // Limitar a 8 dígitos (ddmmyyyy)
+                if (value.length > 8) {
+                    value = value.substring(0, 8);
+                }
+                
+                // Aplicar máscara
+                let valorFormatado = '';
+                if (value.length <= 2) {
+                    valorFormatado = value;
+                } else if (value.length <= 4) {
+                    valorFormatado = value.substring(0, 2) + '/' + value.substring(2);
+                } else {
+                    valorFormatado = value.substring(0, 2) + '/' + value.substring(2, 4) + '/' + value.substring(4, 8);
+                }
+                
+                e.target.value = valorFormatado;
+                valorAnterior = valorFormatado;
+                
+                // Validação em tempo real enquanto digita
+                const partes = valorFormatado.split('/');
+                if (partes.length === 3 && partes[0] && partes[1] && partes[2] && partes[2].length === 4) {
+                    const dia = parseInt(partes[0]);
+                    const mes = parseInt(partes[1]);
+                    const ano = parseInt(partes[2]);
+                    
+                    // Validação parcial durante digitação
+                    if (dia > 0 && mes > 0 && ano >= 2020) {
+                        // Verificar dia válido para o mês (validação parcial)
+                        const diasPorMes = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+                        const isBissexto = (ano % 4 === 0 && ano % 100 !== 0) || (ano % 400 === 0);
+                        if (isBissexto) diasPorMes[1] = 29;
+                        
+                        if (mes <= 12 && dia > diasPorMes[mes - 1]) {
+                            e.target.style.borderColor = 'var(--danger)';
+                            e.target.title = 'Data inválida para este mês';
+                        } else {
+                            e.target.style.borderColor = '';
+                            e.target.title = '';
+                        }
+                    }
+                }
+            });
+
+            novoInput.addEventListener('keydown', function(e) {
+                // Permitir backspace, delete, tab, escape, enter
+                if ([8, 9, 27, 13, 46].indexOf(e.keyCode) !== -1 ||
+                    // Permitir Ctrl+A, Ctrl+C, Ctrl+V, Ctrl+X
+                    (e.keyCode === 65 && e.ctrlKey === true) ||
+                    (e.keyCode === 67 && e.ctrlKey === true) ||
+                    (e.keyCode === 86 && e.ctrlKey === true) ||
+                    (e.keyCode === 88 && e.ctrlKey === true) ||
+                    // Permitir home, end, left, right
+                    (e.keyCode >= 35 && e.keyCode <= 39)) {
+                    return;
+                }
+                // Garantir que é um número
+                if ((e.shiftKey || (e.keyCode < 48 || e.keyCode > 57)) && (e.keyCode < 96 || e.keyCode > 105)) {
+                    e.preventDefault();
+                }
+            });
+
+            novoInput.addEventListener('blur', function(e) {
+                const value = e.target.value.trim();
+                const partes = value.split('/');
+                
+                // Limpar mensagem de erro anterior
+                const mensagemErro = e.target.parentElement.querySelector('.erro-data');
+                if (mensagemErro) {
+                    mensagemErro.remove();
+                }
+                
+                if (partes.length === 3 && partes[0] && partes[1] && partes[2]) {
+                    const diaStr = partes[0].padStart(2, '0');
+                    const mesStr = partes[1].padStart(2, '0');
+                    const anoStr = partes[2];
+                    
+                    // Validar formato completo
+                    if (diaStr.length === 2 && mesStr.length === 2 && anoStr.length === 4) {
+                        const dia = parseInt(diaStr);
+                        const mes = parseInt(mesStr);
+                        const ano = parseInt(anoStr);
+                        
+                        // Validação completa usando função dedicada
+                        if (validarData(dia, mes, ano)) {
+                            // Data válida
+                            e.target.value = `${diaStr}/${mesStr}/${anoStr}`;
+                            e.target.style.borderColor = '';
+                            e.target.style.backgroundColor = '';
+                            
+                            // Converter para formato Y-m-d e atualizar o input original
+                            const inputId = e.target.id.replace('_alt', '');
+                            const inputOriginal = document.getElementById(inputId);
+                            if (inputOriginal) {
+                                inputOriginal.value = `${anoStr}-${mesStr}-${diaStr}`;
+                                // Disparar evento change no Flatpickr se existir
+                                if (inputOriginal._flatpickr) {
+                                    inputOriginal._flatpickr.setDate(`${anoStr}-${mesStr}-${diaStr}`, false);
+                                }
+                            }
+                        } else {
+                            // Data inválida - mostrar erro e reverter
+                            e.target.style.borderColor = 'var(--danger)';
+                            e.target.style.backgroundColor = 'rgba(239, 68, 68, 0.1)';
+                            
+                            // Criar mensagem de erro
+                            const erroDiv = document.createElement('div');
+                            erroDiv.className = 'erro-data';
+                            erroDiv.style.cssText = 'color: var(--danger); font-size: 0.85rem; margin-top: 5px; font-weight: 600;';
+                            erroDiv.textContent = 'Data inválida! Por favor, verifique o dia, mês e ano.';
+                            e.target.parentElement.appendChild(erroDiv);
+                            
+                            // Focar no campo após um tempo
+                            setTimeout(() => {
+                                e.target.focus();
+                                e.target.select();
+                            }, 100);
+                            
+                            // Limpar mensagem de erro após 3 segundos
+                            setTimeout(() => {
+                                if (erroDiv.parentElement) {
+                                    erroDiv.remove();
+                                }
+                            }, 3000);
+                        }
+                    } else {
+                        // Formato incompleto
+                        e.target.style.borderColor = 'var(--danger)';
+                        e.target.style.backgroundColor = 'rgba(239, 68, 68, 0.1)';
+                        
+                        const erroDiv = document.createElement('div');
+                        erroDiv.className = 'erro-data';
+                        erroDiv.style.cssText = 'color: var(--danger); font-size: 0.85rem; margin-top: 5px; font-weight: 600;';
+                        erroDiv.textContent = 'Formato inválido! Use dd/mm/aaaa';
+                        e.target.parentElement.appendChild(erroDiv);
+                        
+                        setTimeout(() => {
+                            e.target.focus();
+                            e.target.select();
+                        }, 100);
+                        
+                        setTimeout(() => {
+                            if (erroDiv.parentElement) {
+                                erroDiv.remove();
+                            }
+                        }, 3000);
+                    }
+                } else if (value.length > 0) {
+                    // Valor parcial ou formato incorreto
+                    e.target.style.borderColor = 'var(--danger)';
+                    e.target.style.backgroundColor = 'rgba(239, 68, 68, 0.1)';
+                    
+                    const erroDiv = document.createElement('div');
+                    erroDiv.className = 'erro-data';
+                    erroDiv.style.cssText = 'color: var(--danger); font-size: 0.85rem; margin-top: 5px; font-weight: 600;';
+                    erroDiv.textContent = 'Data incompleta! Use o formato dd/mm/aaaa';
+                    e.target.parentElement.appendChild(erroDiv);
+                    
+                    setTimeout(() => {
+                        if (erroDiv.parentElement) {
+                            erroDiv.remove();
+                        }
+                    }, 3000);
+                }
+            });
+            
+            return novoInput;
+        }
+
+        // Inicializar calendários Flatpickr (usabilidade + garantia de envio correto para API)
+        function inicializarCalendarios() {
+            const hoje = new Date();
+            const anoAtual = hoje.getFullYear();
+            const primeiroDiaAno = `${anoAtual}-01-01`;
+            const ultimoDiaAno = `${anoAtual}-12-31`;
+
+            // Formatar datas para exibição brasileira
+            const formatarDataBR = (dataISO) => {
+                const [ano, mes, dia] = dataISO.split('-');
+                return `${dia}/${mes}/${ano}`;
+            };
+
+            // Configuração do Flatpickr em português
+            const opcoesFlatpickr = {
+                locale: 'pt',
+                dateFormat: 'Y-m-d',
+                altInput: true,
+                altFormat: 'd/m/Y',
+                allowInput: true,
+                clickOpens: true,
+                animate: true,
+                monthSelectorType: 'static',
+                yearSelectorType: 'static',
+                minDate: '2020-01-01',
+                maxDate: '2099-12-31',
+                showMonths: 1,
+                static: false,
+                enableTime: false,
+                time_24hr: true,
+                wrap: false,
+                // NÃO aplicar máscara clonando/substituindo o altInput (isso quebra o Flatpickr).
+                // Apenas garantir que, ao sair do campo, o que foi digitado em dd/mm/aaaa seja interpretado.
+                onReady: function(selectedDates, dateStr, instance) {
+                    const alt = instance.altInput;
+                    if (!alt) return;
+                    if (alt.dataset && alt.dataset.fpSyncBound === '1') return;
+                    if (alt.dataset) alt.dataset.fpSyncBound = '1';
+
+                    alt.addEventListener('blur', () => {
+                        const v = (alt.value || '').trim();
+                        if (!v) return;
+                        // Tentar interpretar o que foi digitado em BR
+                        if (v.includes('/')) {
+                            instance.setDate(v, false, 'd/m/Y');
+                        } else {
+                            // Se digitarem ISO por algum motivo
+                            instance.setDate(v, false, 'Y-m-d');
+                        }
+                    });
+                },
+            };
+
+            // Inicializar calendário para Data Inicial
+            const flatpickrInicio = flatpickr('#mesInicio', {
+                ...opcoesFlatpickr,
+                defaultDate: primeiroDiaAno,
+                onChange: function(selectedDates, dateStr) {
+                    // Amarrar intervalo: início <= fim
+                    if (flatpickrFim) {
+                        flatpickrFim.set('minDate', dateStr || '2020-01-01');
+                        if (flatpickrFim.selectedDates?.[0] && selectedDates?.[0] && flatpickrFim.selectedDates[0] < selectedDates[0]) {
+                            flatpickrFim.setDate(selectedDates[0], true);
+                        }
+                    }
+                },
+            });
+
+            // Inicializar calendário para Data Final
+            const flatpickrFim = flatpickr('#mesFim', {
+                ...opcoesFlatpickr,
+                defaultDate: ultimoDiaAno,
+                onChange: function(selectedDates, dateStr) {
+                    // Amarrar intervalo: início <= fim
+                    if (flatpickrInicio) {
+                        flatpickrInicio.set('maxDate', dateStr || '2099-12-31');
+                        if (flatpickrInicio.selectedDates?.[0] && selectedDates?.[0] && flatpickrInicio.selectedDates[0] > selectedDates[0]) {
+                            flatpickrInicio.setDate(selectedDates[0], true);
+                        }
+                    }
+                },
+            });
+
+            // Definir valores padrão nos inputs
+            const inputInicio = document.getElementById('mesInicio');
+            const inputFim = document.getElementById('mesFim');
+            
+            inputInicio.value = primeiroDiaAno;
+            inputFim.value = ultimoDiaAno;
+        }
+
+        window.addEventListener('DOMContentLoaded', async function() {
+            // Carregar equipes do arquivo JSON primeiro
+            await carregarEquipes();
+            inicializarCalendarios();
+            // Não carregar dados automaticamente. Aguarda clique em "Aplicar Filtros".
+            inicializarDashboardSemDados();
+        });
+    </script>
+</body>
+</html>

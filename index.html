@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard de Fechamentos de Processos</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📊 Dashboard de Fechamentos de Processos por Responsável</h1>
+        </header>
+
+        <div class="filters">
+            <div class="filter-group">
+                <label for="responsaveis">Filtrar por Responsável:</label>
+                <select id="responsaveis" multiple>
+                    <!-- Preenchido via JavaScript -->
+                </select>
+            </div>
+            <div class="filter-group">
+                <label for="mesInicio">Mês Início:</label>
+                <input type="month" id="mesInicio">
+            </div>
+            <div class="filter-group">
+                <label for="mesFim">Mês Fim:</label>
+                <input type="month" id="mesFim">
+            </div>
+            <button onclick="aplicarFiltros()">Aplicar Filtros</button>
+        </div>
+
+        <div class="metrics">
+            <div class="metric-card">
+                <h3>Total Fechados</h3>
+                <p id="totalFechados">0</p>
+            </div>
+            <div class="metric-card">
+                <h3>Total Abertos</h3>
+                <p id="totalAbertos">0</p>
+            </div>
+            <div class="metric-card">
+                <h3>Saldo Atual</h3>
+                <p id="saldoAtual">0</p>
+            </div>
+            <div class="metric-card">
+                <h3>Taxa de Fechamento</h3>
+                <p id="taxaFechamento">0%</p>
+            </div>
+        </div>
+
+        <div class="charts-grid">
+            <div class="chart-container">
+                <h2>Total de Fechamentos por Responsável</h2>
+                <canvas id="chartFechamentos"></canvas>
+            </div>
+
+            <div class="chart-container">
+                <h2>Evolução Mensal de Fechamentos</h2>
+                <canvas id="chartEvolucao"></canvas>
+            </div>
+
+            <div class="chart-container">
+                <h2>Comparação Abertos vs Fechados (Acumulado)</h2>
+                <canvas id="chartComparacao"></canvas>
+            </div>
+
+            <div class="chart-container">
+                <h2>Saldo Acumulado por Responsável</h2>
+                <canvas id="chartSaldo"></canvas>
+            </div>
+        </div>
+
+        <div class="table-container">
+            <h2>Resumo Detalhado por Responsável</h2>
+            <table id="tabelaResumo">
+                <thead>
+                    <tr>
+                        <th>Responsável</th>
+                        <th>Total Abertos</th>
+                        <th>Total Fechados</th>
+                        <th>Acumulado Abertos</th>
+                        <th>Acumulado Fechados</th>
+                        <th>Saldo Acumulado</th>
+                        <th>Taxa Fechamento (%)</th>
+                    </tr>
+                </thead>
+                <tbody id="tabelaBody">
+                    <!-- Preenchido via JavaScript -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
+
+
+
+
+
