@@ -2134,6 +2134,8 @@
                     ACUMULADO_ABERTOS: parseInt(item.ACUMULADO_ABERTOS) || 0,
                     ACUMULADO_FECHADOS: parseInt(item.ACUMULADO_FECHADOS) || 0,
                     ACUMULADO_REGISTRO_DI: parseInt(item.ACUMULADO_REGISTRO_DI) || 0,
+                    // Usar o acumulado de saldo em aberto devolvido pela API
+                    ACUMULADO_SALDO_EM_ABERTO: parseInt(item.ACUMULADO_SALDO_EM_ABERTO) || 0,
                     SALDO_ACUMULADO: parseInt(item.SALDO_ACUMULADO) || 0,
                     SALDO_EM_ABERTO: parseInt(item.SALDO_EM_ABERTO) || 0
                 });
@@ -2554,6 +2556,21 @@
             return null; // Sem equipe
         }
 
+        // Função auxiliar para obter o saldo em aberto ACUMULADO (preferir o campo específico da API)
+        function obterSaldoEmAbertoAcumulado(item) {
+            if (!item) return 0;
+            if (item.ACUMULADO_SALDO_EM_ABERTO !== undefined && item.ACUMULADO_SALDO_EM_ABERTO !== null) {
+                return Number(item.ACUMULADO_SALDO_EM_ABERTO) || 0;
+            }
+            if (item.SALDO_EM_ABERTO !== undefined && item.SALDO_EM_ABERTO !== null) {
+                return Number(item.SALDO_EM_ABERTO) || 0;
+            }
+            if (item.SALDO_ACUMULADO !== undefined && item.SALDO_ACUMULADO !== null) {
+                return Number(item.SALDO_ACUMULADO) || 0;
+            }
+            return 0;
+        }
+
         // Função auxiliar para agrupar dados por equipe
         function agruparDadosPorEquipe(dados) {
             if (Object.keys(equipes).length === 0) {
@@ -2570,6 +2587,7 @@
                             ACUMULADO_ABERTOS: 0,
                             ACUMULADO_FECHADOS: 0,
                             ACUMULADO_REGISTRO_DI: 0,
+                            ACUMULADO_SALDO_EM_ABERTO: 0,
                             SALDO_ACUMULADO: 0,
                             SALDO_EM_ABERTO: 0,
                             MES: '',
@@ -2584,6 +2602,7 @@
                         agrupado[chave].ACUMULADO_ABERTOS = d.ACUMULADO_ABERTOS || 0;
                         agrupado[chave].ACUMULADO_FECHADOS = d.ACUMULADO_FECHADOS || 0;
                         agrupado[chave].ACUMULADO_REGISTRO_DI = d.ACUMULADO_REGISTRO_DI || 0;
+                        agrupado[chave].ACUMULADO_SALDO_EM_ABERTO = obterSaldoEmAbertoAcumulado(d);
                         agrupado[chave].SALDO_ACUMULADO = d.SALDO_ACUMULADO || 0;
                         agrupado[chave].SALDO_EM_ABERTO = d.SALDO_EM_ABERTO || 0;
                         agrupado[chave].MES = d.MES;
@@ -2608,6 +2627,7 @@
                         ACUMULADO_ABERTOS: 0,
                         ACUMULADO_FECHADOS: 0,
                         ACUMULADO_REGISTRO_DI: 0,
+                        ACUMULADO_SALDO_EM_ABERTO: 0,
                         SALDO_ACUMULADO: 0,
                         SALDO_EM_ABERTO: 0,
                         MES: '',
@@ -2644,6 +2664,7 @@
                         ACUMULADO_ABERTOS: d.ACUMULADO_ABERTOS || 0,
                         ACUMULADO_FECHADOS: d.ACUMULADO_FECHADOS || 0,
                         ACUMULADO_REGISTRO_DI: d.ACUMULADO_REGISTRO_DI || 0,
+                        ACUMULADO_SALDO_EM_ABERTO: obterSaldoEmAbertoAcumulado(d),
                         SALDO_ACUMULADO: d.SALDO_ACUMULADO || 0,
                         SALDO_EM_ABERTO: d.SALDO_EM_ABERTO || 0,
                         MES: d.MES
@@ -2660,10 +2681,12 @@
                     .reduce((sum, v) => sum + v.ACUMULADO_FECHADOS, 0);
                 agrupadoPorEquipe[chaveEquipe].ACUMULADO_REGISTRO_DI = Object.values(valores)
                     .reduce((sum, v) => sum + v.ACUMULADO_REGISTRO_DI, 0);
+                agrupadoPorEquipe[chaveEquipe].ACUMULADO_SALDO_EM_ABERTO = Object.values(valores)
+                    .reduce((sum, v) => sum + (v.ACUMULADO_SALDO_EM_ABERTO || 0), 0);
                 agrupadoPorEquipe[chaveEquipe].SALDO_ACUMULADO = Object.values(valores)
                     .reduce((sum, v) => sum + v.SALDO_ACUMULADO, 0);
-                agrupadoPorEquipe[chaveEquipe].SALDO_EM_ABERTO = Object.values(valores)
-                    .reduce((sum, v) => sum + (v.SALDO_EM_ABERTO || 0), 0);
+                // Compatibilidade: manter SALDO_EM_ABERTO alinhado ao acumulado devolvido pela API
+                agrupadoPorEquipe[chaveEquipe].SALDO_EM_ABERTO = agrupadoPorEquipe[chaveEquipe].ACUMULADO_SALDO_EM_ABERTO;
                 agrupadoPorEquipe[chaveEquipe].MEMBROS = Array.from(agrupadoPorEquipe[chaveEquipe].MEMBROS);
             });
             
@@ -2675,7 +2698,7 @@
             
             const totalFechados = dadosAgrupados.reduce((sum, d) => sum + d.FECHADOS, 0);
             const totalAbertos = dadosAgrupados.reduce((sum, d) => sum + d.ABERTOS, 0);
-            const saldoAtual = dadosAgrupados.reduce((sum, d) => sum + (d.SALDO_EM_ABERTO || d.SALDO_ACUMULADO || 0), 0);
+            const saldoAtual = dadosAgrupados.reduce((sum, d) => sum + obterSaldoEmAbertoAcumulado(d), 0);
             const totalDI = dadosAgrupados.reduce((sum, d) => sum + d.REGISTRO_DI, 0);
             
             document.getElementById('totalFechados').textContent = totalFechados.toLocaleString('pt-BR');
@@ -2689,10 +2712,10 @@
             const dadosAgrupados = agruparDadosPorEquipe(dadosFiltrados);
             
             const equipesOrdenadas = dadosAgrupados.sort((a, b) => 
-                (b.SALDO_EM_ABERTO || b.SALDO_ACUMULADO || 0) - (a.SALDO_EM_ABERTO || a.SALDO_ACUMULADO || 0)
+                obterSaldoEmAbertoAcumulado(b) - obterSaldoEmAbertoAcumulado(a)
             );
             const labels = equipesOrdenadas.map(e => e.NOME);
-            const valores = equipesOrdenadas.map(e => e.SALDO_EM_ABERTO || e.SALDO_ACUMULADO || 0);
+            const valores = equipesOrdenadas.map(e => obterSaldoEmAbertoAcumulado(e));
             
             // Gerar cores dinamicamente
             const cores = valores.map((v, i) => {
@@ -2790,7 +2813,7 @@
                 fechamentosMensais[mes] = dadosAgrupados.reduce((sum, e) => sum + e.FECHADOS, 0);
                 abertosMensais[mes] = dadosAgrupados.reduce((sum, e) => sum + e.ABERTOS, 0);
                 registroDIMensais[mes] = dadosAgrupados.reduce((sum, e) => sum + e.REGISTRO_DI, 0);
-                saldoMensais[mes] = dadosAgrupados.reduce((sum, e) => sum + (e.SALDO_EM_ABERTO || e.SALDO_ACUMULADO || 0), 0);
+                saldoMensais[mes] = dadosAgrupados.reduce((sum, e) => sum + obterSaldoEmAbertoAcumulado(e), 0);
             });
             
             const meses = Object.keys(fechamentosMensais).sort();
@@ -3001,7 +3024,7 @@
                         // D.I. acumulado
                         dadosPorEquipe[equipeNome].registroDI.push(equipeDataAcumulado.ACUMULADO_REGISTRO_DI || equipeDataAcumulado.REGISTRO_DI || 0);
                         // Saldo em aberto (processos em andamento)
-                        dadosPorEquipe[equipeNome].saldo.push(equipeDataAcumulado.SALDO_EM_ABERTO || equipeDataAcumulado.SALDO_ACUMULADO || 0);
+                        dadosPorEquipe[equipeNome].saldo.push(obterSaldoEmAbertoAcumulado(equipeDataAcumulado));
                     } else {
                         // Se não há dados até este mês, usar o último valor conhecido ou 0
                         const ultimoDI = dadosPorEquipe[equipeNome].registroDI.length > 0 
@@ -3153,10 +3176,10 @@
             const dadosAgrupados = agruparDadosPorEquipe(dadosFiltrados);
             
             const equipesOrdenadas = dadosAgrupados.sort((a, b) => 
-                (b.SALDO_EM_ABERTO || b.SALDO_ACUMULADO || 0) - (a.SALDO_EM_ABERTO || a.SALDO_ACUMULADO || 0)
+                obterSaldoEmAbertoAcumulado(b) - obterSaldoEmAbertoAcumulado(a)
             );
             const labels = equipesOrdenadas.map(e => e.NOME);
-            const saldos = equipesOrdenadas.map(e => e.SALDO_EM_ABERTO || e.SALDO_ACUMULADO || 0);
+            const saldos = equipesOrdenadas.map(e => obterSaldoEmAbertoAcumulado(e));
             
             const cores = saldos.map(s => s >= 0 ? 'rgba(16, 185, 129, 0.8)' : 'rgba(239, 68, 68, 0.8)');
             
@@ -3248,7 +3271,7 @@
             rankingData = dadosAgrupados
                 .map(equipe => ({
                     nome: equipe.NOME,
-                    saldo: equipe.SALDO_EM_ABERTO || equipe.SALDO_ACUMULADO || 0,
+                    saldo: obterSaldoEmAbertoAcumulado(equipe),
                     di: equipe.REGISTRO_DI || 0,
                     membros: equipe.MEMBROS || []
                 }))
@@ -3319,12 +3342,12 @@
             const dadosAgrupados = agruparDadosPorEquipe(dadosFiltrados);
             
             const linhas = dadosAgrupados
-                .sort((a, b) => (b.SALDO_EM_ABERTO || b.SALDO_ACUMULADO || 0) - (a.SALDO_EM_ABERTO || a.SALDO_ACUMULADO || 0))
+                .sort((a, b) => obterSaldoEmAbertoAcumulado(b) - obterSaldoEmAbertoAcumulado(a))
                 .map((equipe, index) => {
                     const membrosTexto = equipe.MEMBROS && equipe.MEMBROS.length > 0 
                         ? `<br><small style="color: var(--text-light);">${equipe.MEMBROS.join(', ')}</small>`
                         : '';
-                    const saldoEmAberto = equipe.SALDO_EM_ABERTO || equipe.SALDO_ACUMULADO || 0;
+                    const saldoEmAberto = obterSaldoEmAbertoAcumulado(equipe);
                     
                     return `
                         <tr>
