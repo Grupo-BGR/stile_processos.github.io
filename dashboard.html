@@ -2153,12 +2153,13 @@
         }
 
 
-        // Obter datas padrão para a API (último ano)
+        // Obter datas padrão para a API
+        // Requisito: ao abrir o HTML, buscar a partir de 01/01/2025
         function obterDatasPadrao() {
             const hoje = new Date();
-            const anoAtual = hoje.getFullYear();
-            const dataInicio = `${anoAtual}-01-01`;
-            const dataFim = `${anoAtual}-12-31`;
+            const pad2 = (n) => String(n).padStart(2, '0');
+            const dataInicio = '2025-01-01';
+            const dataFim = `${hoje.getFullYear()}-${pad2(hoje.getMonth() + 1)}-${pad2(hoje.getDate())}`;
             return { dataInicio, dataFim };
         }
 
@@ -3593,9 +3594,10 @@
         // Inicializar calendários Flatpickr (usabilidade + garantia de envio correto para API)
         function inicializarCalendarios() {
             const hoje = new Date();
-            const anoAtual = hoje.getFullYear();
-            const primeiroDiaAno = `${anoAtual}-01-01`;
-            const ultimoDiaAno = `${anoAtual}-12-31`;
+            const pad2 = (n) => String(n).padStart(2, '0');
+            // Padrão exigido: iniciar em 01/01/2025 e finalizar na data de hoje
+            const dataInicioPadrao = '2025-01-01';
+            const dataFimPadrao = `${hoje.getFullYear()}-${pad2(hoje.getMonth() + 1)}-${pad2(hoje.getDate())}`;
 
             // Formatar datas para exibição brasileira
             const formatarDataBR = (dataISO) => {
@@ -3646,7 +3648,7 @@
             // Inicializar calendário para Data Inicial
             const flatpickrInicio = flatpickr('#mesInicio', {
                 ...opcoesFlatpickr,
-                defaultDate: primeiroDiaAno,
+                defaultDate: dataInicioPadrao,
                 onChange: function(selectedDates, dateStr) {
                     // Amarrar intervalo: início <= fim
                     if (flatpickrFim) {
@@ -3661,7 +3663,7 @@
             // Inicializar calendário para Data Final
             const flatpickrFim = flatpickr('#mesFim', {
                 ...opcoesFlatpickr,
-                defaultDate: ultimoDiaAno,
+                defaultDate: dataFimPadrao,
                 onChange: function(selectedDates, dateStr) {
                     // Amarrar intervalo: início <= fim
                     if (flatpickrInicio) {
@@ -3676,17 +3678,28 @@
             // Definir valores padrão nos inputs
             const inputInicio = document.getElementById('mesInicio');
             const inputFim = document.getElementById('mesFim');
-            
-            inputInicio.value = primeiroDiaAno;
-            inputFim.value = ultimoDiaAno;
+
+            // Sincronizar valores (input real + altInput do Flatpickr)
+            if (flatpickrInicio) flatpickrInicio.set('maxDate', dataFimPadrao);
+            if (flatpickrFim) flatpickrFim.set('minDate', dataInicioPadrao);
+            if (flatpickrInicio) flatpickrInicio.setDate(dataInicioPadrao, true);
+            if (flatpickrFim) flatpickrFim.setDate(dataFimPadrao, true);
+
+            inputInicio.value = dataInicioPadrao;
+            inputFim.value = dataFimPadrao;
         }
 
         window.addEventListener('DOMContentLoaded', async function() {
             // Carregar equipes do arquivo JSON primeiro
             await carregarEquipes();
             inicializarCalendarios();
-            // Não carregar dados automaticamente. Aguarda clique em "Aplicar Filtros".
+            // Inicializar UI e já carregar dados conforme o filtro padrão (a partir de 01/01/2025)
             inicializarDashboardSemDados();
+            try {
+                await aplicarFiltros();
+            } catch (e) {
+                console.error('Falha ao aplicar filtros no carregamento inicial:', e);
+            }
         });
     </script>
 </body>
